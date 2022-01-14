@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-// The 6502 is represented by its name because we might add the W65C02 some day!
+// The 6502 is represented here by its name because we might add the W65C02 some day!
+// If we do that though a lot of stuff will have to shift around
 namespace V502 {
     class MOS6502 {
     public:
@@ -29,11 +30,25 @@ namespace V502 {
         register_t flags;
 
         //
+        // CPU Flags
+        //
+        enum class Flags : register_t {
+            Carry       = 0b00000001,
+            Zero        = 0b00000010,
+            Interrupt   = 0b00000100,
+            Decimal     = 0b00001000,
+            Break       = 0b00010000,
+            // Bit 5 has no purpose
+            Overflow    = 0b01000000,
+            Negative    = 0b10000000
+        };
+
+        //
         // Instruction decoding
         //
 
         // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear set of opcodes
-        enum class Opcode {
+        enum class Opcode : register_t {
             BRK_IMPL    = 0x00,
             ORA_X_IND   = 0x01,
             ORA_ZPG     = 0x05,
