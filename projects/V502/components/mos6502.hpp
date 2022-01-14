@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-// The 6502 is represented here by its name because we might add the W65C02 some day!
-// If we do that though a lot of stuff will have to shift around
 namespace V502 {
     class Memory;
 
+    // The 6502 is represented here by its name because we might add the W65C02 some day!
+    // If we do that though a lot of stuff will have to shift around
     class MOS6502 {
     public:
         // The 6502 is laid out as close to its real counterpart as possible
@@ -46,10 +46,13 @@ namespace V502 {
         };
 
         //
-        // Instruction decoding
+        // Instructions
         //
 
-        // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear set of opcodes
+        // TODO: Timing info might be needed to emulate system clock
+        // OpCode length table is missing because the implementation for a given opcode knows how large it is!
+
+        // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear array of opcodes
         enum class OpCode : register_t {
             BRK_IMPL    = 0x00,
             ORA_X_IND   = 0x01,
@@ -72,43 +75,17 @@ namespace V502 {
             STA         = 0x8D,
         };
 
-        // 16 x 16 matrix of instruction info
-        // TODO: This might be redundant due to instruction behavior?
-        // L is a placeholder to let the future me know something is undefined
-#define L 0xFF
-
-        // TODO: Fill in this table completely
-        const uint8_t opcode_length_table[255] = {
-                /* X    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F */
-                /* 1 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 2 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 3 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 4 */ L, L, L, L, L, L, L, L, L, L, L, L, 2, L, L, L,
-                /* 5 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 6 */ L, L, L, L, L, L, L, L, L, 1, L, L, L, L, L, L,
-                /* 7 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 8 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* 9 */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* A */ L, L, L, L, L, L, L, L, L, 1, L, L, L, L, L, L,
-                /* B */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* C */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* D */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* E */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-                /* F */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
-        };
-
         //
         // Memory
         //
 
         // Just like the real deal, it's a DIY sort of deal here! Provide your own program memory and system memory!
         // If you forget one the CPU will throw an exception!
-
         Memory *program_memory;
         Memory *system_memory;
 
         MOS6502();
-        void Cycle();
+        bool Cycle();
     };
 }
 

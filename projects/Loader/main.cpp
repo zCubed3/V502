@@ -1,34 +1,60 @@
 #include <V502/components/mos6502.hpp>
 #include <V502/components/memory.hpp>
 
+#include <iostream>
+#include <fstream>
+
 int main() {
     V502::MOS6502* cpu = new V502::MOS6502();
 
     V502::Memory* sys_memory = new V502::Memory(255);
     cpu->system_memory = sys_memory;
 
-    V502::Memory* prog_memory = new V502::Memory(255);
+    // If autorun.bin is detected, run it, otherwise ask
+    std::ifstream binfile("autorun.bin");
+    char path[256];
+
+    while (!binfile.is_open()) {
+        std::cout << "Path to bin? ";
+        std::cin >> path;
+
+        binfile.open(path);
+
+        if (!binfile.is_open())
+            std::cout << "bin file not found at '" << path << "'" << std::endl;
+    }
+
+    binfile.seekg(0, std::ifstream::end);
+    size_t binsize = binfile.tellg();
+    binfile.seekg(0, std::ifstream::beg);
+
+    V502::Memory* prog_memory = new V502::Memory(binsize);
     cpu->program_memory = prog_memory;
 
-    // Debug program
-    // TODO: Remove me and add binary loading
+    for (auto b = 0; b < binsize; b++) {
+        binfile.read(reinterpret_cast<char*>(&prog_memory->at(b)), 1);
+    }
 
-    // ADC #$01
-    (*prog_memory)[0] = 0x69;
-    (*prog_memory)[1] = 0x01;
+    binfile.close();
 
-    // STA $00)
-    (*prog_memory)[2] = 0x85;
-    (*prog_memory)[3] = 0x00;
+    std::cout << "Binary data: " << std::endl;
+    for (auto d = 0; d < prog_memory->size(); d++) {
+        std::cout << std::hex << +prog_memory->at(d) << " ";
 
-    //JMP $0000
-    (*prog_memory)[4] = 0x4C;
-    (*prog_memory)[5] = 0x00;
-    (*prog_memory)[6] = 0x00;
+        if (d % 16 == 0 && d != 0)
+            std::cout << std::endl;
+    }
 
-    while (1) {
-        cpu->Cycle();
-        printf("%x\n", sys_memory->at(0));
+    std::cout << std::dec << std::endl;
+
+    while (cpu->Cycle()) {
+        std::cout << std::hex << "0x0000: " << +sys_memory->at(0) << "\r" << std::flush;
+
+        //for (int x = 0; x < 8; x++) {
+        //    printf("%i", (cpu->flags << x) & 1);
+        //}
+
+        //printf("\n");
     }
 
     return 0;
