@@ -73,7 +73,7 @@ namespace V502 {
         };
 
         // 16 x 16 matrix of instruction info
-
+        // TODO: This might be redundant due to instruction behavior?
         // L is a placeholder to let the future me know something is undefined
 #define L 0xFF
 
