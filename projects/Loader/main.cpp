@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 int main() {
     V502::MOS6502* cpu = new V502::MOS6502();
@@ -46,9 +47,15 @@ int main() {
     }
 
     std::cout << std::dec << std::endl;
+    timespec cpuwait = {};
+
+    cpuwait.tv_nsec = 1000; // 1mhz
 
     while (cpu->Cycle()) {
         std::cout << std::hex << "0x0000: " << +sys_memory->at(0) << "\r" << std::flush;
+
+        // TODO: Better CPU clocking
+        nanosleep(&cpuwait, nullptr);
 
         //for (int x = 0; x < 8; x++) {
         //    printf("%i", (cpu->flags << x) & 1);

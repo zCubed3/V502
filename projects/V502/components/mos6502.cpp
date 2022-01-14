@@ -39,9 +39,7 @@ namespace V502 {
                 break;
 
             case OpCode::JMP_ABS:
-                a = program_memory->at(++program_counter);
-                b = program_memory->at(++program_counter);
-                program_counter = (uint16_t)a >> 8 | (uint16_t)b;
+                program_counter = make_pair(program_memory->at(++program_counter), program_memory->at(++program_counter));
                 increment = false;
                 break;
         }
