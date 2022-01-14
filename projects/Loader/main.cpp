@@ -6,9 +6,9 @@
 #include <time.h>
 
 int main() {
-    V502::MOS6502* cpu = new V502::MOS6502();
+    V502::MOS6502 *cpu = new V502::MOS6502();
 
-    V502::Memory* sys_memory = new V502::Memory(255);
+    V502::Memory *sys_memory = new V502::Memory(255);
     cpu->system_memory = sys_memory;
 
     // If autorun.bin is detected, run it, otherwise ask
@@ -25,7 +25,7 @@ int main() {
             std::cout << "bin file not found at '" << path << "'" << std::endl;
     }
 
-    V502::Memory* prog_memory = new V502::Memory(binfile);
+    V502::Memory *prog_memory = new V502::Memory(binfile);
     cpu->program_memory = prog_memory;
 
     binfile.close();
@@ -39,15 +39,15 @@ int main() {
     }
 
     std::cout << std::dec << std::endl;
-    timespec cpuwait = {};
+    timespec wait = {};
 
-    cpuwait.tv_nsec = 1000; // 1mhz
+    wait.tv_nsec = 1000; // 1mhz
 
     while (cpu->Cycle()) {
         std::cout << std::hex << "0x0000: " << +sys_memory->at(0) << "\r" << std::flush;
 
         // TODO: Better CPU clocking
-        nanosleep(&cpuwait, nullptr);
+        nanosleep(&wait, nullptr);
 
         //for (int x = 0; x < 8; x++) {
         //    printf("%i", (cpu->flags << x) & 1);
