@@ -6,6 +6,8 @@
 // The 6502 is represented here by its name because we might add the W65C02 some day!
 // If we do that though a lot of stuff will have to shift around
 namespace V502 {
+    class Memory;
+
     class MOS6502 {
     public:
         // The 6502 is laid out as close to its real counterpart as possible
@@ -48,7 +50,7 @@ namespace V502 {
         //
 
         // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear set of opcodes
-        enum class Opcode : register_t {
+        enum class OpCode : register_t {
             BRK_IMPL    = 0x00,
             ORA_X_IND   = 0x01,
             ORA_ZPG     = 0x05,
@@ -65,7 +67,9 @@ namespace V502 {
             //TODO: 0x16 and above are missing except for a few
             LDA_NOW     = 0xA9,
             ADC_NOW     = 0x69,
-            JMP_ABS     = 0x4C
+            JMP_ABS     = 0x4C,
+            STA_ZPG     = 0x85,
+            STA         = 0x8D,
         };
 
         // 16 x 16 matrix of instruction info
@@ -92,6 +96,19 @@ namespace V502 {
                 /* E */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
                 /* F */ L, L, L, L, L, L, L, L, L, L, L, L, L, L, L, L,
         };
+
+        //
+        // Memory
+        //
+
+        // Just like the real deal, it's a DIY sort of deal here! Provide your own program memory and system memory!
+        // If you forget one the CPU will throw an exception!
+
+        Memory *program_memory;
+        Memory *system_memory;
+
+        MOS6502();
+        void Cycle();
     };
 }
 
