@@ -25,16 +25,8 @@ int main() {
             std::cout << "bin file not found at '" << path << "'" << std::endl;
     }
 
-    binfile.seekg(0, std::ifstream::end);
-    size_t binsize = binfile.tellg();
-    binfile.seekg(0, std::ifstream::beg);
-
-    V502::Memory* prog_memory = new V502::Memory(binsize);
+    V502::Memory* prog_memory = new V502::Memory(binfile);
     cpu->program_memory = prog_memory;
-
-    for (auto b = 0; b < binsize; b++) {
-        binfile.read(reinterpret_cast<char*>(&prog_memory->at(b)), 1);
-    }
 
     binfile.close();
 

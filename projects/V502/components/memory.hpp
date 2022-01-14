@@ -13,7 +13,7 @@ namespace V502 {
 
     public:
         Memory(uint16_t desired_size);
-        Memory(std::ifstream );
+        Memory(std::ifstream &file);
 
         uint8_t& at(uint16_t idx);
 
