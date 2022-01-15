@@ -5,6 +5,8 @@
 #include <fstream>
 #include <time.h>
 
+#include <V502/assembler/assembler.hpp>
+
 int main() {
     V502::MOS6502 *cpu = new V502::MOS6502();
 
@@ -30,12 +32,21 @@ int main() {
 
     binfile.close();
 
+    V502::Assembler6502 assembler("test.s");
+    auto bytes = assembler.Compile();
+
     std::cout << "Binary data: " << std::endl;
     for (auto d = 0; d < prog_memory->size(); d++) {
         std::cout << std::hex << +prog_memory->at(d) << " ";
 
         if (d % 16 == 0 && d != 0)
             std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+
+    for (auto byte : bytes) {
+        std::cout << std::hex << +byte << " ";
     }
 
     std::cout << std::dec << std::endl;
