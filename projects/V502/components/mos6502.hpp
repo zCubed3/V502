@@ -55,8 +55,8 @@ namespace V502 {
         Memory *system_memory;
 
         // Helpers for operations to reduce repeated code
-        uint8_t next_program();
-        uint16_t next_program_wide();
+        uint8_t next_byte();
+        uint16_t next_wide();
         void store_at(uint16_t idx, uint8_t val);
         void store_at_page(uint8_t page, uint8_t idx, uint8_t val);
         void jump(uint16_t idx);

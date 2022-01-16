@@ -12,7 +12,7 @@ namespace V502 {
     DEFINE_OPERATION(JMP) {
         switch (code) {
             case OpCode::JMP_ABS:
-                cpu->jump(cpu->next_program_wide());
+                cpu->jump(cpu->next_wide());
                 break;
         }
 
@@ -22,7 +22,7 @@ namespace V502 {
     DEFINE_OPERATION(ADC) {
         switch (code) {
             case OpCode::ADC_NOW:
-                cpu->accumulator += cpu->next_program();
+                cpu->accumulator += cpu->next_byte();
                 break;
         }
 
@@ -33,13 +33,14 @@ namespace V502 {
         switch (code) {
             case OpCode::STA_X_ZPG:
             case OpCode::STA_ZPG:
-                cpu->store_at_page(0, cpu->next_program() + (code == STA_X_ZPG ? cpu->index_x : 0), cpu->accumulator);
+                cpu->store_at_page(0, cpu->next_byte() + (code == STA_X_ZPG ? cpu->index_x : 0), cpu->accumulator);
                 break;
 
             case OpCode::STA_ABS:
             case OpCode::STA_X_ABS:
             case OpCode::STA_Y_ABS: {
-                cpu->store_at(cpu->next_program_wide() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
+                cpu->store_at(
+                        cpu->next_wide() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
                 break;
             }
         }

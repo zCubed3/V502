@@ -46,12 +46,12 @@ namespace V502 {
     }
 
     // TODO: Nullptr check
-    uint8_t MOS6502::next_program() {
+    uint8_t MOS6502::next_byte() {
         return program_memory->at(++program_counter);
     }
 
-    uint16_t MOS6502::next_program_wide() {
-        return make_wide(next_program(), next_program());
+    uint16_t MOS6502::next_wide() {
+        return make_wide(next_byte(), next_byte());
     }
 
     void MOS6502::store_at(uint16_t idx, uint8_t val) {
