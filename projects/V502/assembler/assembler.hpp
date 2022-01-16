@@ -13,7 +13,8 @@ namespace V502 {
         Assembler6502(std::string path);
 
         std::string assembly = "";
-        std::vector<uint8_t> Compile();
+
+        std::vector<uint8_t> compile();
     };
 }
 

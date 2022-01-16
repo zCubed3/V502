@@ -5,8 +5,6 @@
 #include <fstream>
 #include <time.h>
 
-#include <V502/assembler/assembler.hpp>
-
 int main() {
     V502::MOS6502 *cpu = new V502::MOS6502();
 

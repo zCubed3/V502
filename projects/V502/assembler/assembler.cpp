@@ -30,7 +30,7 @@ namespace V502 {
         file.close();
     }
 
-    std::vector<uint8_t> Assembler6502::Compile() {
+    std::vector<uint8_t> Assembler6502::compile() {
         if (assembly.empty())
             throw std::runtime_error("Can't compile nothing!");
 
