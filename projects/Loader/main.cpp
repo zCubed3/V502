@@ -43,8 +43,16 @@ int main() {
 
     wait.tv_nsec = 1000; // 1mhz
 
+    cpu->index_x = 1;
+
     while (cpu->cycle()) {
-        std::cout << std::hex << "0x0000: " << +sys_memory->at(0) << "\r" << std::flush;
+        std::cout << std::hex;
+        std::cout << "(X: " << +cpu->index_x << ") ";
+        std::cout << "0 -> 15: ";
+        for (int x = 0; x < 16; x++) {
+            std::cout << +sys_memory->at(x) << " ";
+        }
+        std::cout << "\r" << std::flush;
 
         // TODO: Better CPU clocking
         nanosleep(&wait, nullptr);

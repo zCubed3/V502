@@ -58,6 +58,11 @@ namespace V502 {
         system_memory->at(idx) = val;
     }
 
+    // Used by X offset ZPG variants to help with wrapping around by purposefully overflowing an 8 bit int
+    void MOS6502::store_at_page(uint8_t page, uint8_t idx, uint8_t val) {
+        MOS6502::store_at(make_wide(page, idx), val);
+    }
+
     void MOS6502::jump(uint16_t idx) {
         program_counter = idx;
     }

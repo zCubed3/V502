@@ -58,6 +58,7 @@ namespace V502 {
         uint8_t next_program();
         uint16_t next_program_wide();
         void store_at(uint16_t idx, uint8_t val);
+        void store_at_page(uint8_t page, uint8_t idx, uint8_t val);
         void jump(uint16_t idx);
 
         MOS6502();

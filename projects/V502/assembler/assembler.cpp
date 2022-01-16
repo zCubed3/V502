@@ -108,7 +108,7 @@ namespace V502 {
 
             if (lhs == "STA") {
                 if (wide)
-                    opcode = OpCode::STA;
+                    opcode = OpCode::STA_ABS;
                 else
                     opcode = OpCode::STA_ZPG;
             }
@@ -124,7 +124,7 @@ namespace V502 {
                 opcode = OpCode::JMP_ABS;
             }
 
-            bytes.emplace_back((uint8_t)opcode);
+            bytes.emplace_back(opcode);
 
             for (int x = 0; x < rhs.length(); x += 2) {
                 int radix = 10;

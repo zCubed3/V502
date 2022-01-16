@@ -15,9 +15,15 @@ namespace V502 {
 
     // TODO: Timing info might be needed to emulate a system clock
     // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear array of opcodes
+
+    // X_IDX = use the X index
+    // Y_IDX = use the Y index
+    // ZPG = use only the 0x00 page
+    // X_ZPG = ZPG + X Index (wraps)
+    // Y_ZPG = ZPG + Y Index (wraps)
     enum OpCode : register_t {
         BRK_IMPL    = 0x00,
-        ORA_X_IND   = 0x01,
+        ORA_X_IDX   = 0x01,
         ORA_ZPG     = 0x05,
         ASL_ZPG     = 0x06,
         PHP_IMPL    = 0x08,
@@ -26,15 +32,21 @@ namespace V502 {
         ORA_ABS     = 0x0D,
         ASL_ABS     = 0x0E,
         BPL_REL     = 0x10,
-        ORA_Y_IND   = 0x11,
+        ORA_Y_IDX   = 0x11,
         ORA_X_ZPG   = 0x15,
 
-        //TODO: 0x16 and above are missing except for a few
+        //TODO: 0x16 and above are missing except for a handfull
+
         LDA_NOW     = 0xA9,
         ADC_NOW     = 0x69,
+
         JMP_ABS     = 0x4C,
+
         STA_ZPG     = 0x85,
-        STA         = 0x8D,
+        STA_X_ZPG   = 0x95,
+        STA_ABS     = 0x8D,
+        STA_X_ABS   = 0x9D,
+        STA_Y_ABS   = 0x99,
     };
 
     extern const instruction_t OPERATIONS[256];
