@@ -4,6 +4,7 @@ set(V502Lib_SOURCES
     "components/memory.cpp"
 
     "assembler/assembler.cpp"
+    "assembler/instruction_container.cpp"
 
     "operations/operation.cpp"
 )

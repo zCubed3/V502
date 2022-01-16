@@ -1,4 +1,4 @@
-# V502 - A 6502 emulation toolkit
+# V502 - 6502 Simulator + Assembler
 
 #### Written in C++17 but would most likely compile with older standards
 
@@ -13,8 +13,8 @@
 * 6502 assembler (give it a .s file and it'll compile a .bin of it!)
 
 ### TODO
-* Better assembler (labels, error handling, more instructions)
-* Handling more instructions
+* Better assembler (labels, error handling, more containers)
+* Handling more containers
 
 #### Future Hopes
 * Basic Commodore 64 emulation (SID chip and more complex peripherals require more work on top of CPU and system emulation)

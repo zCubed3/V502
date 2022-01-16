@@ -4,9 +4,10 @@
 #include <iostream>
 #include <algorithm>
 
-#include "../components/mos6502.hpp"
+#include "instruction_container.hpp"
 
-#include "../operations/operation.hpp"
+#include <components/mos6502.hpp>
+#include <operations/operation.hpp>
 
 namespace V502 {
     enum RhsType : uint32_t {
@@ -15,12 +16,6 @@ namespace V502 {
         HexNumber,
         BinaryNumber,
         DecNumber
-    };
-
-    enum IndexingFlags : uint32_t {
-        Indirect = 1,
-        IndexedX = 2,
-        IndexedY = 4
     };
 
     Assembler6502::Assembler6502(std::string path) {
@@ -98,6 +93,29 @@ namespace V502 {
                 rhs = rhs.substr(1);
 
             RhsType type = RhsType::Unknown;
+            uint32_t calling = 0;
+
+
+            if (ident == '(') { // Is this indirect? (or deferred?)
+                // If it's indirect, ident is wrong
+                ident = rhs[0];
+                rhs = rhs.substr(1);
+                rhs.pop_back();
+
+                calling |= CallingFlags::Indirect;
+            }
+
+            auto comma = rhs.find(",");
+            if (comma != std::string::npos) { // Is this indexed?
+                char indexer = rhs.substr(comma)[1];
+                rhs = rhs.substr(0, comma);
+
+                if (indexer == 'X')
+                    calling |= CallingFlags::IndexedX;
+
+                if (indexer == 'Y')
+                    calling |= CallingFlags::IndexedY;
+            }
 
             if (ident == '#') {
                 char ident2 = rhs[0];
@@ -122,72 +140,20 @@ namespace V502 {
                     rhs = rhs.substr(1);
             }
             else if (ident == '$') {
+                calling |= CallingFlags::ZeroPage; // If this is a byte
                 type = RhsType::Address;
             }
 
-            auto comma = rhs.find(",");
-            uint32_t indexing = 0;
-
-            if (comma != std::string::npos) { // Is this indexed?
-                char indexer = rhs.substr(comma)[1];
-                rhs = rhs.substr(0, comma);
-
-                if (indexer == 'X')
-                    indexing |= IndexingFlags::IndexedX;
-
-                if (indexer == 'Y')
-                    indexing |= IndexingFlags::IndexedY;
-            }
-
-            // TODO: Replace me with something better and less hacky!
             OpCode opcode;
-            bool wide = rhs.length() > 2;
+            bool word = rhs.length() > 2;
 
-            // TODO: Is there a better way to do this?
-
-            if (lhs == "STA") {
-                if (wide)
-                    opcode = OpCode::STA_ABS;
-                else {
-                    if (indexing & IndexingFlags::IndexedX)
-                        opcode = OpCode::STA_X_ZPG;
-                    else
-                        opcode = OpCode::STA_ZPG;
+            for (auto container : InstructionContainer::containers) {
+                if (container.symbol == lhs) {
+                    auto opt = container.get_code(calling, word);
+                    if (opt.has_value())
+                        opcode = (V502::OpCode)opt.value();
                 }
             }
-
-            if (lhs == "LDX") {
-                opcode = OpCode::LDX_NOW;
-            }
-
-            if (lhs == "ADC") {
-                opcode = OpCode::ADC_NOW;
-            }
-
-            if (lhs == "CMP") {
-                opcode = OpCode::CMP_NOW;
-            }
-
-            if (lhs == "CPX") {
-                opcode = OpCode::CPX_NOW;
-            }
-
-            if (lhs == "BEQ") {
-                opcode = OpCode::BEQ;
-            }
-
-            if (lhs == "JMP") {
-                if (!wide)
-                    throw std::runtime_error("JMP doesn't support 8 bit addresses!");
-
-                opcode = OpCode::JMP_ABS;
-            }
-
-            if (lhs == "INX")
-                opcode = OpCode::INX;
-
-            if (lhs == "INY")
-                opcode = OpCode::INY;
 
             bytes.emplace_back(opcode);
 
