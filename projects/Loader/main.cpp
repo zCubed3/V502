@@ -11,9 +11,9 @@
 
 void print_help() {
     std::cout << "Arguments: \n";
-    std::cout << "\t-b or --bin, requires a value after, tells the loader what binary file to load\n";
-    std::cout << "\t-d or --debug, tells the loader to increase verbosity (Does nothing right now)\n";
-    std::cout << "\t-i or --interval, requires a number after, tells the loader to wait the provided number of milliseconds\n";
+    std::cout << "\t-b or --bin, requires a value after, tells the program what binary file to load\n";
+    std::cout << "\t-d or --debug, tells the program to increase verbosity (Does nothing right now)\n";
+    std::cout << "\t-i or --interval, requires a number after, tells the program to wait the provided number of milliseconds\n";
     std::cout << std::endl;
 }
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
             }
         }
     } else {
-        std::cout << "Please provide a .bin file to execute!\nRun V502Loader --help to see possible arguments." << std::endl;
+        std::cout << "Please provide a .bin file to execute!\nRun 'Emu502 --help' to see possible arguments." << std::endl;
         return 1;
     }
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
     cpu->system_memory = sys_memory;
 
     if (binpath.empty()) {
-        std::cerr << "No bin path was provided, please provide one using -b or --bin!";
+        std::cerr << "No bin path was provided, please provide one using -b or --bin!" << std::endl;
         return 1;
     }
 

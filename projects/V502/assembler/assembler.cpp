@@ -49,11 +49,23 @@ namespace V502 {
 
         //https://stackoverflow.com/questions/53849/how-do-i-tokenize-a-string-in-c
         while (std::getline(asm_stream, buffer, '\n')) {
+            if (buffer.empty())
+                continue;
+
             // If this line starts with ; we discard it, it's a comment
             if (buffer[0] == ';')
                 continue;
 
-            lines.emplace_back(std::string(buffer));
+            auto comment = buffer.find(";");
+            if (comment != std::string::npos)
+                buffer = buffer.substr(0, comment);
+
+            // Trim trailing spaces
+            while (buffer.back() == ' ')
+                buffer.pop_back();
+
+            std::transform(buffer.begin(), buffer.end(), buffer.begin(), toupper); // Converts everything to uppercase
+            lines.emplace_back(buffer);
         }
 
         // We then have to split the lines again, this time by tokens, usually 6502 asm only has a lhs and rhs
@@ -78,8 +90,6 @@ namespace V502 {
         for (auto pair : pairs) {
             // TODO: Add more instructions
             std::string lhs = pair.first;
-            std::transform(lhs.begin(), lhs.end(), lhs.begin(), toupper);
-
             std::string rhs = pair.second;
 
             char ident = rhs.length() > 0 ? rhs[0] : 0;

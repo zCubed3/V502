@@ -3,7 +3,8 @@ adc #$01
 sta $00,X
 inx
 cpx #$10
-beq #$04
+beq #$04 ; Jump 4 spaces in memory ahead to ldx
 jmp $0000
+
 ldx #$00
 jmp $0000
