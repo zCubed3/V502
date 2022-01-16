@@ -15,7 +15,8 @@ namespace V502 {
 
     public:
         Memory(word_t desired_size);
-        Memory(std::ifstream &file);
+
+        void copy_from(std::ifstream &file);
 
         byte_t& at(word_t idx);
 

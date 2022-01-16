@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <cstring>
+
 #include "instruction_container.hpp"
 
 #include <components/mos6502.hpp>
@@ -80,8 +82,16 @@ namespace V502 {
             pairs.emplace_back(std::make_pair(args[0], args[1]));
         }
 
+        word_t origin = 0x4000; // Default program location
+        word_t write = origin;
+        std::vector<uint8_t> bytes(0xFFFF); // 65535 bytes long, we generate giant rom images!
+        memset(bytes.data(), 0, bytes.size());
+
+        // We tell the system where the program begins
+        bytes[0xFFFC] = origin >> 8;
+        bytes[0xFFFD] = origin;
+
         // Then we have to determine what operation it is, and what variant of said instruction it is (now, ind_x, ind_y, zpg...)
-        std::vector<uint8_t> bytes;
         for (auto pair: pairs) {
             // TODO: Add more instructions
             std::string lhs = pair.first;
@@ -166,7 +176,7 @@ namespace V502 {
                 throw std::runtime_error("Unknown instruction!");
             }
 
-            bytes.emplace_back(opcode.value());
+            bytes[write++] = opcode.value();
 
             if (rhs.length() > 0) {
                 for (int x = 0; x < rhs.length(); x += 2) {
@@ -183,7 +193,7 @@ namespace V502 {
                     }
 
                     std::string tok = rhs.substr(x, 2);
-                    bytes.emplace_back(std::stoi(tok, 0, radix));
+                    bytes[write++] = std::stoi(tok, 0, radix);
                 }
             }
         }

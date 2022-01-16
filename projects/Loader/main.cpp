@@ -9,7 +9,9 @@
 
 #include <unistd.h>
 #include <time.h>
-#include <math.h>
+
+#define PAD_HEX_LO std::setfill('0') << std::setw(2)
+#define PAD_HEX std::setfill('0') << std::setw(4)
 
 void print_help() {
     std::cout << "Arguments: \n";
@@ -19,7 +21,7 @@ void print_help() {
 }
 
 int main(int argc, char** argv) {
-    std::string binpath;
+    std::string bin_path;
     bool custom_time = false;
     int interval = 0;
 
@@ -41,7 +43,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (what_input == "bin" || what_input == "b") {
-                    binpath = arg;
+                    bin_path = arg;
                     need_input = false;
                 }
 
@@ -105,42 +107,30 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    V502::MOS6502 *cpu = new V502::MOS6502();
-
-    V502::Memory *sys_memory = new V502::Memory(256);
-    cpu->system_memory = sys_memory;
-
-    if (binpath.empty()) {
+    if (bin_path.empty()) {
         std::cerr << "No bin path was provided, please provide one using -b or --bin!" << std::endl;
         return 1;
     }
 
-    std::ifstream binfile(binpath);
+    V502::MOS6502 *cpu = new V502::MOS6502();
 
-    if (!binfile.is_open()) {
-        std::cerr << "bin file not found at '" << binpath << "'" << std::endl;
+    // In a real 6502 program memory and system memory are in the same space
+    // TODO: Fix 6502 memory and combine it!
+    V502::Memory *sys_memory = new V502::Memory(65535); // 64kb of memory
+    cpu->system_memory = sys_memory;
+
+    std::ifstream bin_file(bin_path);
+
+    if (!bin_file.is_open()) {
+        std::cerr << "bin file not found at '" << bin_path << "'" << std::endl;
         return 1;
     }
 
-    V502::Memory *prog_memory = new V502::Memory(binfile);
-    cpu->program_memory = prog_memory;
+    sys_memory->copy_from(bin_file);
+    cpu->reset();
+    bin_file.close();
 
-    binfile.close();
-
-    std::cout << "Binary data: " << std::endl;
-    for (auto d = 0; d < prog_memory->size(); d++) {
-        std::cout << std::hex << +prog_memory->at(d) << " ";
-
-        if (d % 16 == 0 && d != 0)
-            std::cout << std::endl;
-    }
-
-    std::cout << std::dec << std::endl;
-    timespec wait = {};
-
-    wait.tv_nsec = 1000; // 1mhz
-
-    // TODO: Better way to wipe the screen
+    // This is the best it gets without ncurses!
     std::cout << "\033[" << 0 << ";" << 0 << "H" << std::endl;
     for (int h = 0; h < 60; h++) {
         for (int x = 0; x < 512; x++)
@@ -148,6 +138,9 @@ int main(int argc, char** argv) {
         std::cout << std::endl;
     }
     std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
+
+    timespec wait = {};
+    wait.tv_nsec = 1000; // 1mhz
 
     while (cpu->cycle()) {
         std::cout << std::hex;
@@ -165,23 +158,40 @@ int main(int argc, char** argv) {
         std::cout << "|\n\n";
         std::cout << "Registers: \n";
 
-        std::cout << "| X = " << +cpu->index_x;
-        std::cout << " | Y = " << +cpu->index_y;
-        std::cout << " | A = " << +cpu->accumulator;
-        std::cout << " | S = " << +cpu->stack_ptr;
+        std::cout << "| IX = " << PAD_HEX_LO << +cpu->index_x;
+        std::cout << " | IY = " << PAD_HEX_LO << +cpu->index_y;
+        std::cout << " | AC = " << PAD_HEX_LO << +cpu->accumulator;
+        std::cout << " | ST = " << PAD_HEX_LO << +cpu->stack_ptr;
+        std::cout << " | PC = " << PAD_HEX << +cpu->program_counter;
         std::cout << " |        \n\n";
 
         std::cout << "Program Memory: \n";
-        for (int x = 0; x < prog_memory->size() / 16; x++) {
+        auto lower = (cpu->program_counter - 16) / 16;
+        auto upper = (cpu->program_counter + 32) / 16;
+        for (int x = lower; x < upper; x++) {
+            if (x == lower) {
+                std::cout << "BEF";
+            } else if (x == upper - 1) {
+                std::cout << "NXT";
+            } else {
+                std::cout << "CUR";
+            }
+            std::cout << ": ";
+
+            if (x < 0) {
+                std::cout << "NONE\n";
+                continue;
+            }
+
             std::cout << std::setfill('0') << std::setw(4) << x * 16 << " -> ";
             std::cout << std::setfill('0') << std::setw(4) << ((x + 1) * 16) - 1 << ": ";
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                if (idx >= prog_memory->size())
+                if (idx >= sys_memory->size())
                     break;
 
-                int value = +prog_memory->at(idx);
+                int value = +sys_memory->at(idx);
 
                 if (cpu->program_counter == idx)
                     std::cout<<"\033[1;4;93m";
@@ -197,11 +207,13 @@ int main(int argc, char** argv) {
                 std::cout << " ";
             }
 
-            std::cout << "\n\n";
+            std::cout << "\n";
         }
 
+        std::cout << "\n";
+
         std::cout << "System Memory: \n";
-        for (int x = 0; x < sys_memory->size() / 16; x++) {
+        for (int x = 0; x < 16; x++) { // TODO: Show more than the zero page
             // I hate C++ syntax at times...
             std::cout << std::setfill('0') << std::setw(4) << x * 16 << " -> ";
             std::cout << std::setfill('0') << std::setw(4) << ((x + 1) * 16) - 1 << ": ";

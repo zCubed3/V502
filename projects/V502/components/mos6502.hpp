@@ -43,9 +43,8 @@ namespace V502 {
         // Memory
         //
 
-        // Just like the real deal, it's a DIY sort of deal here! Provide your own program memory and system memory!
-        // If you forget one the CPU will throw an exception!
-        Memory *program_memory;
+        // Just like the real deal, it's a DIY sort of deal here! Provide your own memory!
+        // If you forget this the CPU will throw an exception!
         Memory *system_memory;
 
         // Helpers for operations to reduce repeated code
@@ -56,6 +55,7 @@ namespace V502 {
         void jump(word_t idx);
         void compare(byte_t lhs, byte_t rhs);
         void add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting = false);
+        void reset();
 
         MOS6502();
         bool cycle();

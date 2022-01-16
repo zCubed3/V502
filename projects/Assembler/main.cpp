@@ -18,20 +18,6 @@ int main() {
     V502::Assembler6502 *assembler = new V502::Assembler6502(str);
     std::vector<uint8_t> bytes = assembler->compile();
 
-    int i = 0;
-
-    std::cout << std::endl;
-    std::cout << "Compiled bytes: " << std::hex << std::endl;
-    for (auto byte : bytes) {
-        std::cout << +byte << " ";
-
-        if (i++ >= 16) {
-            std::cout << std::endl;
-            i = 0;
-        }
-    }
-    std::cout << std::dec << std::endl << std::endl;
-
     str.clear();
 
     std::cout << "Where should the binary go?" << std::endl;
