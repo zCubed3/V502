@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
         auto upper = (cpu->program_counter + 32) / 16;
         for (int x = lower; x < upper; x++) {
             if (x == lower) {
-                std::cout << "BEF";
+                std::cout << "PRV";
             } else if (x == upper - 1) {
                 std::cout << "NXT";
             } else {
