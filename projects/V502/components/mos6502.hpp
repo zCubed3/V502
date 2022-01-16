@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <v502types.hpp>
+
 namespace V502 {
     class Memory;
 
@@ -15,26 +17,21 @@ namespace V502 {
 
         // TODO: Timing table and virtual CPU clock!
 
-        // Some basic typedefs to make things stand out better
-
-        typedef uint8_t register_t; // 8 bit register
-        typedef uint16_t wregister_t; // 16 bit register
-
         //
         // Registers
         //
-        wregister_t program_counter;
+        word_t program_counter;
 
-        register_t stack_ptr;
-        register_t accumulator;
-        register_t index_x;
-        register_t index_y;
-        register_t flags;
+        byte_t stack_ptr;
+        byte_t accumulator;
+        byte_t index_x;
+        byte_t index_y;
+        byte_t flags;
 
         //
         // CPU Flags
         //
-        enum class Flags : register_t {
+        enum class Flags : byte_t {
             Carry       = 0b00000001,
             Zero        = 0b00000010,
             Interrupt   = 0b00000100,
@@ -55,11 +52,11 @@ namespace V502 {
         Memory *system_memory;
 
         // Helpers for operations to reduce repeated code
-        uint8_t next_byte();
-        uint16_t next_wide();
-        void store_at(uint16_t idx, uint8_t val);
-        void store_at_page(uint8_t page, uint8_t idx, uint8_t val);
-        void jump(uint16_t idx);
+        byte_t next_byte();
+        word_t next_word();
+        void store_at(word_t idx, byte_t val);
+        void store_at_page(byte_t page, byte_t idx, byte_t val);
+        void jump(word_t idx);
 
         MOS6502();
         bool cycle();

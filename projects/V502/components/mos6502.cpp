@@ -5,7 +5,7 @@
 #include <operations/operation.hpp>
 
 namespace V502 {
-    inline uint16_t make_wide(uint8_t a, uint8_t b) {
+    inline uint16_t make_word(uint8_t a, uint8_t b) {
         return (uint16_t)a >> 8 | (uint16_t)b;
     }
 
@@ -46,24 +46,24 @@ namespace V502 {
     }
 
     // TODO: Nullptr check
-    uint8_t MOS6502::next_byte() {
+    byte_t MOS6502::next_byte() {
         return program_memory->at(++program_counter);
     }
 
-    uint16_t MOS6502::next_wide() {
-        return make_wide(next_byte(), next_byte());
+    word_t MOS6502::next_word() {
+        return make_word(next_byte(), next_byte());
     }
 
-    void MOS6502::store_at(uint16_t idx, uint8_t val) {
+    void MOS6502::store_at(word_t idx, byte_t val) {
         system_memory->at(idx) = val;
     }
 
     // Used by X offset ZPG variants to help with wrapping around by purposefully overflowing an 8 bit int
-    void MOS6502::store_at_page(uint8_t page, uint8_t idx, uint8_t val) {
-        MOS6502::store_at(make_wide(page, idx), val);
+    void MOS6502::store_at_page(byte_t page, byte_t idx, byte_t val) {
+        MOS6502::store_at(make_word(page, idx), val);
     }
 
-    void MOS6502::jump(uint16_t idx) {
+    void MOS6502::jump(word_t idx) {
         program_counter = idx;
     }
 }

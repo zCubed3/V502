@@ -2,12 +2,12 @@
 #define V502_OPERATION_HPP
 
 #include <stdint.h>
+#include <v502types.hpp>
 
 namespace V502 {
     class MOS6502;
 
-    typedef bool(*instruction_t)(int, MOS6502*);
-    typedef uint8_t register_t;
+    typedef bool(*instruction_t)(byte_t, MOS6502*);
 
     //
     // Instructions
@@ -21,7 +21,7 @@ namespace V502 {
     // ZPG = use only the 0x00 page
     // X_ZPG = ZPG + X Index (wraps)
     // Y_ZPG = ZPG + Y Index (wraps)
-    enum OpCode : register_t {
+    enum OpCode : byte_t {
         BRK_IMPL    = 0x00,
         ORA_X_IDX   = 0x01,
         ORA_ZPG     = 0x05,

@@ -6,13 +6,13 @@
 #include <components/mos6502.hpp>
 #include <components/memory.hpp>
 
-#define DEFINE_OPERATION(NAME) bool OP_##NAME(int code, MOS6502* cpu)
+#define DEFINE_OPERATION(NAME) bool OP_##NAME(byte_t code, MOS6502* cpu)
 
 namespace V502 {
     DEFINE_OPERATION(JMP) {
         switch (code) {
             case OpCode::JMP_ABS:
-                cpu->jump(cpu->next_wide());
+                cpu->jump(cpu->next_word());
                 break;
         }
 
@@ -40,7 +40,7 @@ namespace V502 {
             case OpCode::STA_X_ABS:
             case OpCode::STA_Y_ABS: {
                 cpu->store_at(
-                        cpu->next_wide() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
+                        cpu->next_word() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
                 break;
             }
         }
@@ -65,8 +65,8 @@ namespace V502 {
             /* 5 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
+            /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* A */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* B */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
