@@ -30,6 +30,8 @@ namespace V502 {
 
         LDA_NOW     = 0xA9,
 
+        LDX_NOW     = 0xA2,
+
         ADC_NOW     = 0x69,
 
         JMP_ABS     = 0x4C,
@@ -39,6 +41,12 @@ namespace V502 {
         STA_ABS     = 0x8D,
         STA_X_ABS   = 0x9D,
         STA_Y_ABS   = 0x99,
+
+        CMP_NOW     = 0xC9,
+
+        CPX_NOW     = 0xE0,
+
+        BEQ         = 0xF0,
     };
 
     extern const instruction_t OPERATIONS[256];

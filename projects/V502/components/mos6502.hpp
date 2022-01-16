@@ -31,7 +31,7 @@ namespace V502 {
         //
         // CPU Flags
         //
-        enum class Flags : byte_t {
+        enum Flags : byte_t {
             Carry       = 0b00000001,
             Zero        = 0b00000010,
             Interrupt   = 0b00000100,
@@ -57,6 +57,7 @@ namespace V502 {
         void store_at(word_t idx, byte_t val);
         void store_at_page(byte_t page, byte_t idx, byte_t val);
         void jump(word_t idx);
+        void compare(byte_t lhs, byte_t rhs);
 
         MOS6502();
         bool cycle();

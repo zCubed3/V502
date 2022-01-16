@@ -64,4 +64,18 @@ namespace V502 {
     void MOS6502::jump(word_t idx) {
         program_counter = idx;
     }
+
+    // CMP, CPX, and CPY
+    void MOS6502::compare(byte_t lhs, byte_t rhs) {
+        // TODO: More compact?
+        if (lhs > rhs)
+            flags |= Flags::Carry;
+        else
+            flags &= ~Flags::Carry;
+
+        if (lhs == rhs)
+            flags |= Flags::Zero;
+        else
+            flags &= ~Flags::Zero;
+    }
 }

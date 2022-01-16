@@ -141,8 +141,24 @@ namespace V502 {
                 }
             }
 
+            if (lhs == "LDX") {
+                opcode = OpCode::LDX_NOW;
+            }
+
             if (lhs == "ADC") {
                 opcode = OpCode::ADC_NOW;
+            }
+
+            if (lhs == "CMP") {
+                opcode = OpCode::CMP_NOW;
+            }
+
+            if (lhs == "CPX") {
+                opcode = OpCode::CPX_NOW;
+            }
+
+            if (lhs == "BEQ") {
+                opcode = OpCode::BEQ;
             }
 
             if (lhs == "JMP") {
