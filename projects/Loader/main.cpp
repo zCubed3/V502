@@ -5,9 +5,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <iomanip> // for setw and setfill
 
 #include <unistd.h>
 #include <time.h>
+#include <math.h>
 
 void print_help() {
     std::cout << "Arguments: \n";
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
 
     V502::MOS6502 *cpu = new V502::MOS6502();
 
-    V502::Memory *sys_memory = new V502::Memory(255);
+    V502::Memory *sys_memory = new V502::Memory(256);
     cpu->system_memory = sys_memory;
 
     if (binpath.empty()) {
@@ -150,6 +152,8 @@ int main(int argc, char** argv) {
     while (cpu->cycle()) {
         std::cout << std::hex;
 
+        std::cout << "[ Emu502 (6502 Simulator) - Powered by V502 ]\n\n";
+
         std::cout << "Flags: \n";
         std::cout << "| C Z I D - B V N |\n";
         std::cout << "| ";
@@ -169,13 +173,8 @@ int main(int argc, char** argv) {
 
         std::cout << "Program Memory: \n";
         for (int x = 0; x < prog_memory->size() / 16; x++) {
-            // Fix for alignment
-            if (x == 0)
-                std::cout << "00";
-            else
-                std::cout << x * 16;
-
-            std::cout << " -> "<< (x + 1) * 16 << ": ";
+            std::cout << std::setfill('0') << std::setw(4) << x * 16 << " -> ";
+            std::cout << std::setfill('0') << std::setw(4) << ((x + 1) * 16) - 1 << ": ";
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
@@ -203,13 +202,9 @@ int main(int argc, char** argv) {
 
         std::cout << "System Memory: \n";
         for (int x = 0; x < sys_memory->size() / 16; x++) {
-            // Fix for alignment
-            if (x == 0)
-                std::cout << "00";
-            else
-                std::cout << x * 16;
-
-            std::cout << " -> "<< (x + 1) * 16 << ": ";
+            // I hate C++ syntax at times...
+            std::cout << std::setfill('0') << std::setw(4) << x * 16 << " -> ";
+            std::cout << std::setfill('0') << std::setw(4) << ((x + 1) * 16) - 1 << ": ";
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;

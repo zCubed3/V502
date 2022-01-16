@@ -21,6 +21,7 @@ namespace V502 {
     // ZPG = use only the 0x00 page
     // X_ZPG = ZPG + X Index (wraps)
     // Y_ZPG = ZPG + Y Index (wraps)
+    // ABS = use the following address
     enum OpCode : byte_t {
         //TODO: More instructions
 
