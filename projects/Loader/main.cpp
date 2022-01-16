@@ -12,7 +12,6 @@
 void print_help() {
     std::cout << "Arguments: \n";
     std::cout << "\t-b or --bin, requires a value after, tells the program what binary file to load\n";
-    std::cout << "\t-d or --debug, tells the program to increase verbosity (Does nothing right now)\n";
     std::cout << "\t-i or --interval, requires a number after, tells the program to wait the provided number of milliseconds\n";
     std::cout << std::endl;
 }
@@ -139,25 +138,87 @@ int main(int argc, char** argv) {
 
     wait.tv_nsec = 1000; // 1mhz
 
+    // TODO: Better way to wipe the screen
+    std::cout << "\033[" << 0 << ";" << 0 << "H" << std::endl;
+    for (int h = 0; h < 60; h++) {
+        for (int x = 0; x < 512; x++)
+            std::cout << " ";
+        std::cout << std::endl;
+    }
+    std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
+
     while (cpu->cycle()) {
         std::cout << std::hex;
-        std::cout << "(X: " << +cpu->index_x << ") ";
-        std::cout << "0 -> 15: ";
-        for (int x = 0; x < 16; x++) {
-            std::cout << +sys_memory->at(x) << " ";
+
+        std::cout << "Registers: \n";
+        std::cout << "| X = " << +cpu->index_x << " | Y = " << +cpu->index_y << " | A = " << +cpu->accumulator << " |        \n\n";
+
+        std::cout << "Program Memory: \n";
+        for (int x = 0; x < prog_memory->size() / 16; x++) {
+            // Fix for alignment
+            if (x == 0)
+                std::cout << "00";
+            else
+                std::cout << x * 16;
+
+            std::cout << " -> "<< (x + 1) * 16 << ": ";
+
+            for (int y = 0; y < 16; y++) {
+                int idx = x * 16 + y;
+                if (idx >= prog_memory->size())
+                    break;
+
+                int value = +prog_memory->at(idx);
+
+                if (cpu->program_counter == idx)
+                    std::cout<<"\033[1;4;93m";
+
+                if (value < 16)
+                    std::cout << "0";
+
+                std::cout << value;
+
+                if (cpu->program_counter == idx)
+                    std::cout<<"\033[0m";
+
+                std::cout << " ";
+            }
+
+            std::cout << "\n\n";
         }
-        std::cout << "\r" << std::flush;
+
+        std::cout << "System Memory: \n";
+        for (int x = 0; x < sys_memory->size() / 16; x++) {
+            // Fix for alignment
+            if (x == 0)
+                std::cout << "00";
+            else
+                std::cout << x * 16;
+
+            std::cout << " -> "<< (x + 1) * 16 << ": ";
+
+            for (int y = 0; y < 16; y++) {
+                int idx = x * 16 + y;
+                if (idx >= sys_memory->size())
+                    break;
+
+                int value = +sys_memory->at(idx);
+
+                if (value < 16)
+                    std::cout << "0";
+
+                std::cout << value << " ";
+            }
+
+            std::cout << "\n";
+        }
 
         if (custom_time)
             usleep(interval * 1000);
         else
             nanosleep(&wait, nullptr);
 
-        //for (int x = 0; x < 8; x++) {
-        //    printf("%i", (cpu->flags << x) & 1);
-        //}
-
-        //printf("\n");
+        std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
     }
 
     return 0;
