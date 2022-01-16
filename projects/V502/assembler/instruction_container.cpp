@@ -68,6 +68,7 @@ namespace V502 {
         return {};
     }
 
+    // TODO: Containers for rest of instructions
     std::vector<InstructionContainer> InstructionContainer::containers {
         // { "", {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, false },
         { "JMP", {}, {}, {}, JMP_ABS, {}, {}, {}, {}, {}, {}, {}, true },
@@ -78,5 +79,6 @@ namespace V502 {
         { "BEQ", {}, {}, {}, {}, {}, {}, {}, {}, {}, BEQ, {}, false },
         { "ADC", {}, {}, {}, {}, {}, {}, {}, {}, {}, ADC_NOW, {}, false },
         { "LDX", {}, {}, {}, {}, {}, {}, {}, {}, {}, LDX_NOW, {}, false },
+        { "NOP", {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, NOP, false },
     };
 }

@@ -24,6 +24,8 @@ namespace V502 {
     enum OpCode : byte_t {
         //TODO: More instructions
 
+        NOP         = 0x1A,
+
         INX         = 0xE8,
 
         INY         = 0xC8,

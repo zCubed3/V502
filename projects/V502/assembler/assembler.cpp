@@ -144,18 +144,27 @@ namespace V502 {
                 type = RhsType::Address;
             }
 
-            OpCode opcode;
+            OptOpCode opcode;
             bool word = rhs.length() > 2;
 
             for (auto container : InstructionContainer::containers) {
                 if (container.symbol == lhs) {
                     auto opt = container.get_code(calling, word);
                     if (opt.has_value())
-                        opcode = (V502::OpCode)opt.value();
+                        opcode = opt;
+                    else {
+                        std::cerr << lhs << " is an instruction, but the variant you're trying to use is invalid, please check your syntax!" << std::endl;
+                        throw std::runtime_error("Instruction was recognized but variant was not!");
+                    }
                 }
             }
 
-            bytes.emplace_back(opcode);
+            if (!opcode.has_value()) {
+                std::cerr << lhs << " is not a valid instruction, it either isn't recognized or implemented!" << std::endl;
+                throw std::runtime_error("Unknown instruction!");
+            }
+
+            bytes.emplace_back(opcode.value());
 
             if (rhs.length() > 0) {
                 for (int x = 0; x < rhs.length(); x += 2) {
