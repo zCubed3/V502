@@ -54,7 +54,7 @@ int main() {
 
     wait.tv_nsec = 1000; // 1mhz
 
-    while (cpu->Cycle()) {
+    while (cpu->cycle()) {
         std::cout << std::hex << "0x0000: " << +sys_memory->at(0) << "\r" << std::flush;
 
         // TODO: Better CPU clocking

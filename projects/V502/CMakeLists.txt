@@ -4,6 +4,9 @@ set(V502Lib_SOURCES
     "components/memory.cpp"
 
     "assembler/assembler.cpp"
+
+    "operations/operation.cpp"
 )
 
 add_library(V502Lib STATIC ${V502Lib_SOURCES})
+target_include_directories(V502Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

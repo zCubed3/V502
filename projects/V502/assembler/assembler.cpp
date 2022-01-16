@@ -6,6 +6,8 @@
 
 #include "../components/mos6502.hpp"
 
+#include "../operations/operation.hpp"
+
 namespace V502 {
     enum class RhsType {
         Unknown,
@@ -101,25 +103,25 @@ namespace V502 {
             }
 
             // TODO: Replace me with something better and less hacky!
-            MOS6502::OpCode opcode;
+            OpCode opcode;
             bool wide = rhs.length() > 2;
 
             if (lhs == "STA") {
                 if (wide)
-                    opcode = MOS6502::OpCode::STA;
+                    opcode = OpCode::STA;
                 else
-                    opcode = MOS6502::OpCode::STA_ZPG;
+                    opcode = OpCode::STA_ZPG;
             }
 
             if (lhs == "ADC") {
-                opcode = MOS6502::OpCode::ADC_NOW;
+                opcode = OpCode::ADC_NOW;
             }
 
             if (lhs == "JMP") {
                 if (!wide)
                     throw std::runtime_error("JMP doesn't support 8 bit addresses!");
 
-                opcode = MOS6502::OpCode::JMP_ABS;
+                opcode = OpCode::JMP_ABS;
             }
 
             bytes.emplace_back((uint8_t)opcode);

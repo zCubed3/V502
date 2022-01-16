@@ -46,36 +46,6 @@ namespace V502 {
         };
 
         //
-        // Instructions
-        //
-
-        // TODO: Timing info might be needed to emulate system clock
-        // OpCode length table is missing because the implementation for a given opcode knows how large it is!
-
-        // Adapted table from https://www.masswerk.at/6502/6502_instruction_set.html into a linear array of opcodes
-        enum class OpCode : register_t {
-            BRK_IMPL    = 0x00,
-            ORA_X_IND   = 0x01,
-            ORA_ZPG     = 0x05,
-            ASL_ZPG     = 0x06,
-            PHP_IMPL    = 0x08,
-            ORA_NOW     = 0x09,
-            ASL_A       = 0x0A,
-            ORA_ABS     = 0x0D,
-            ASL_ABS     = 0x0E,
-            BPL_REL     = 0x10,
-            ORA_Y_IND   = 0x11,
-            ORA_X_ZPG   = 0x15,
-
-            //TODO: 0x16 and above are missing except for a few
-            LDA_NOW     = 0xA9,
-            ADC_NOW     = 0x69,
-            JMP_ABS     = 0x4C,
-            STA_ZPG     = 0x85,
-            STA         = 0x8D,
-        };
-
-        //
         // Memory
         //
 
@@ -84,8 +54,14 @@ namespace V502 {
         Memory *program_memory;
         Memory *system_memory;
 
+        // Helpers for operations to reduce repeated code
+        uint8_t next_program();
+        uint16_t next_program_wide();
+        void store_at(uint16_t idx, uint8_t val);
+        void jump(uint16_t idx);
+
         MOS6502();
-        bool Cycle();
+        bool cycle();
     };
 }
 

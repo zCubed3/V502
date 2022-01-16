@@ -2,8 +2,10 @@
 
 #include "memory.hpp"
 
+#include <operations/operation.hpp>
+
 namespace V502 {
-    inline uint16_t make_pair(uint8_t a, uint8_t b) {
+    inline uint16_t make_wide(uint8_t a, uint8_t b) {
         return (uint16_t)a >> 8 | (uint16_t)b;
     }
 
@@ -14,7 +16,7 @@ namespace V502 {
 
     // Executes the next instruction and increments the program counter!
     // Returns false if the CPU has reached some dead end!
-    bool MOS6502::Cycle() {
+    bool MOS6502::cycle() {
         if (!program_memory)
             throw new std::runtime_error("6502 was missing program memory!");
 
@@ -29,19 +31,11 @@ namespace V502 {
         uint8_t b = 0;
 
         bool increment = true;
-        switch ((OpCode)op) {
-            case OpCode::ADC_NOW:
-                accumulator += program_memory->at(++program_counter);
-                break;
 
-            case OpCode::STA_ZPG:
-                system_memory->at(program_memory->at(++program_counter)) = accumulator;
-                break;
+        try {
+            increment = OPERATIONS[op](op, this);
+        } catch (std::exception& err) {
 
-            case OpCode::JMP_ABS:
-                program_counter = make_pair(program_memory->at(++program_counter), program_memory->at(++program_counter));
-                increment = false;
-                break;
         }
 
         if (increment)
@@ -49,5 +43,22 @@ namespace V502 {
 
         // TODO: Failure states, such as getting to the end of the program with nothing more, or faults!
         return true;
+    }
+
+    // TODO: Nullptr check
+    uint8_t MOS6502::next_program() {
+        return program_memory->at(++program_counter);
+    }
+
+    uint16_t MOS6502::next_program_wide() {
+        return make_wide(next_program(), next_program());
+    }
+
+    void MOS6502::store_at(uint16_t idx, uint8_t val) {
+        system_memory->at(idx) = val;
+    }
+
+    void MOS6502::jump(uint16_t idx) {
+        program_counter = idx;
     }
 }
