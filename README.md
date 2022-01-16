@@ -13,8 +13,8 @@
 * 6502 assembler (give it a .s file and it'll compile a .bin of it!)
 
 ### TODO
-* Better assembler (labels, error handling, more containers)
-* Handling more containers
+* Better assembler (labels, error handling, more instructions)
+* Handling more instructions
 
 #### Future Hopes
 * Basic Commodore 64 emulation (SID chip and more complex peripherals require more work on top of CPU and system emulation)
