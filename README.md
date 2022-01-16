@@ -14,3 +14,7 @@
 
 ### TODO
 * Better assembler (labels, error handling, more instructions)
+* Handling more instructions
+
+#### Future Hopes
+* Basic Commodore 64 emulation (SID chip and more complex peripherals require more work on top of CPU and system emulation)
