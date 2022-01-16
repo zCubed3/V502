@@ -48,8 +48,13 @@ namespace V502 {
         std::string buffer;
 
         //https://stackoverflow.com/questions/53849/how-do-i-tokenize-a-string-in-c
-        while (std::getline(asm_stream, buffer, '\n'))
+        while (std::getline(asm_stream, buffer, '\n')) {
+            // If this line starts with ; we discard it, it's a comment
+            if (buffer[0] == ';')
+                continue;
+
             lines.emplace_back(std::string(buffer));
+        }
 
         // We then have to split the lines again, this time by tokens, usually 6502 asm only has a lhs and rhs
         std::vector<std::pair<std::string, std::string>> pairs;

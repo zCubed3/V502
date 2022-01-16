@@ -43,8 +43,6 @@ int main() {
 
     wait.tv_nsec = 1000; // 1mhz
 
-    cpu->index_x = 1;
-
     while (cpu->cycle()) {
         std::cout << std::hex;
         std::cout << "(X: " << +cpu->index_x << ") ";
