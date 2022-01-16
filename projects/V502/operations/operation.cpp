@@ -7,6 +7,7 @@
 #include <components/memory.hpp>
 
 #define DEFINE_OPERATION(NAME) bool OP_##NAME(byte_t code, MOS6502* cpu)
+#define INVLID OP_BAD
 
 namespace V502 {
     DEFINE_OPERATION(JMP) {
@@ -52,8 +53,6 @@ namespace V502 {
         std::cerr << "0x" << std::hex << code << std::dec << " is an invalid instruction!" << std::endl;
         throw std::runtime_error("Illegal instruction call! Either it doesn't exist or isn't defined yet!");
     }
-
-#define INVLID OP_BAD
 
     const instruction_t OPERATIONS[256] = {
             /*      0       1       2       3       4       5       6       7       8       9       A       B       C       D       E       F   */

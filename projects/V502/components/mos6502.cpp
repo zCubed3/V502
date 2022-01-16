@@ -26,10 +26,10 @@ namespace V502 {
         bool increment = true;
 
         try {
-            byte_t op = next_byte();
+            byte_t op = program_memory->at(program_counter);
             increment = OPERATIONS[op](op, this);
         } catch (std::exception& err) {
-
+            return false;
         }
 
         if (increment)

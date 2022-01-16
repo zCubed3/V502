@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <v502types.hpp>
+#include <v502common.hpp>
 
 namespace V502 {
     class Memory;

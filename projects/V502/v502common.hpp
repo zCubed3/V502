@@ -1,5 +1,5 @@
-#ifndef V502_V502TYPES_HPP
-#define V502_V502TYPES_HPP
+#ifndef V502_V502COMMON_HPP
+#define V502_V502COMMON_HPP
 
 namespace V502 {
     typedef uint8_t byte_t;
