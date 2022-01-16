@@ -22,22 +22,14 @@ namespace V502 {
     // X_ZPG = ZPG + X Index (wraps)
     // Y_ZPG = ZPG + Y Index (wraps)
     enum OpCode : byte_t {
-        BRK_IMPL    = 0x00,
-        ORA_X_IDX   = 0x01,
-        ORA_ZPG     = 0x05,
-        ASL_ZPG     = 0x06,
-        PHP_IMPL    = 0x08,
-        ORA_NOW     = 0x09,
-        ASL_A       = 0x0A,
-        ORA_ABS     = 0x0D,
-        ASL_ABS     = 0x0E,
-        BPL_REL     = 0x10,
-        ORA_Y_IDX   = 0x11,
-        ORA_X_ZPG   = 0x15,
+        //TODO: More instructions
 
-        //TODO: 0x16 and above are missing except for a handfull
+        INX         = 0xE8,
+
+        INY         = 0xC8,
 
         LDA_NOW     = 0xA9,
+
         ADC_NOW     = 0x69,
 
         JMP_ABS     = 0x4C,

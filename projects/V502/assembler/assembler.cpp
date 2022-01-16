@@ -9,12 +9,18 @@
 #include "../operations/operation.hpp"
 
 namespace V502 {
-    enum class RhsType {
+    enum RhsType : uint32_t {
         Unknown,
         Address,
         HexNumber,
         BinaryNumber,
         DecNumber
+    };
+
+    enum IndexingFlags : uint32_t {
+        Indirect = 1,
+        IndexedX = 2,
+        IndexedY = 4
     };
 
     Assembler6502::Assembler6502(std::string path) {
@@ -71,8 +77,10 @@ namespace V502 {
 
             std::string rhs = pair.second;
 
-            char ident = rhs[0];
-            rhs = rhs.substr(1);
+            char ident = rhs.length() > 0 ? rhs[0] : 0;
+
+            if (ident != 0)
+                rhs = rhs.substr(1);
 
             RhsType type = RhsType::Unknown;
 
@@ -102,15 +110,35 @@ namespace V502 {
                 type = RhsType::Address;
             }
 
+            auto comma = rhs.find(",");
+            uint32_t indexing = 0;
+
+            if (comma != std::string::npos) { // Is this indexed?
+                char indexer = rhs.substr(comma)[1];
+                rhs = rhs.substr(0, comma);
+
+                if (indexer == 'X')
+                    indexing |= IndexingFlags::IndexedX;
+
+                if (indexer == 'Y')
+                    indexing |= IndexingFlags::IndexedY;
+            }
+
             // TODO: Replace me with something better and less hacky!
             OpCode opcode;
             bool wide = rhs.length() > 2;
 
+            // TODO: Is there a better way to do this?
+
             if (lhs == "STA") {
                 if (wide)
                     opcode = OpCode::STA_ABS;
-                else
-                    opcode = OpCode::STA_ZPG;
+                else {
+                    if (indexing & IndexingFlags::IndexedX)
+                        opcode = OpCode::STA_X_ZPG;
+                    else
+                        opcode = OpCode::STA_ZPG;
+                }
             }
 
             if (lhs == "ADC") {
@@ -124,23 +152,31 @@ namespace V502 {
                 opcode = OpCode::JMP_ABS;
             }
 
+            if (lhs == "INX")
+                opcode = OpCode::INX;
+
+            if (lhs == "INY")
+                opcode = OpCode::INY;
+
             bytes.emplace_back(opcode);
 
-            for (int x = 0; x < rhs.length(); x += 2) {
-                int radix = 10;
+            if (rhs.length() > 0) {
+                for (int x = 0; x < rhs.length(); x += 2) {
+                    int radix = 10;
 
-                switch (type) {
-                    case RhsType::HexNumber:
-                    case RhsType::Address:
-                        radix = 16;
-                        break;
+                    switch (type) {
+                        case RhsType::HexNumber:
+                        case RhsType::Address:
+                            radix = 16;
+                            break;
 
-                    case RhsType::BinaryNumber:
-                        radix = 2;
+                        case RhsType::BinaryNumber:
+                            radix = 2;
+                    }
+
+                    std::string tok = rhs.substr(x, 2);
+                    bytes.emplace_back(std::stoi(tok, 0, radix));
                 }
-
-                std::string tok = rhs.substr(x, 2);
-                bytes.emplace_back(std::stoi(tok, 0, radix));
             }
         }
 

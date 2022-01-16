@@ -40,8 +40,7 @@ namespace V502 {
             case OpCode::STA_ABS:
             case OpCode::STA_X_ABS:
             case OpCode::STA_Y_ABS: {
-                cpu->store_at(
-                        cpu->next_word() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
+                cpu->store_at(cpu->next_word() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
                 break;
             }
         }
@@ -49,8 +48,18 @@ namespace V502 {
         return true;
     }
 
+    DEFINE_OPERATION(INX) {
+        cpu->index_x += 1;
+        return true;
+    }
+
+    DEFINE_OPERATION(INY) {
+        cpu->index_y += 1;
+        return true;
+    }
+
     DEFINE_OPERATION(BAD) {
-        std::cerr << "0x" << std::hex << code << std::dec << " is an invalid instruction!" << std::endl;
+        std::cerr << "0x" << std::hex << +code << std::dec << " is an invalid instruction!" << std::endl;
         throw std::runtime_error("Illegal instruction call! Either it doesn't exist or isn't defined yet!");
     }
 
@@ -68,9 +77,9 @@ namespace V502 {
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* A */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* B */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INY, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* E */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* E */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* F */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID
     };
 }
