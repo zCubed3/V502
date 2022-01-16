@@ -2,7 +2,7 @@
 adc #$01
 sta $00,X
 inx
-cpx #$0F
+cpx #$10
 beq #$04
 jmp $0000
 ldx #$00
