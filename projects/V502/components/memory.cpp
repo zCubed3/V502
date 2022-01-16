@@ -20,6 +20,6 @@ namespace V502 {
             file.read(reinterpret_cast<char*>(&buffer[b]), 1);
     }
 
-    uint8_t &Memory::at(uint16_t idx) { return (*this)[idx]; }
-    uint16_t Memory::size() { return length; }
+    byte_t &Memory::at(word_t idx) { return (*this)[idx]; }
+    word_t Memory::size() { return length; }
 }

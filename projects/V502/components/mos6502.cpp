@@ -23,16 +23,10 @@ namespace V502 {
         if (!system_memory)
             throw new std::runtime_error("6502 was missing system memory!");
 
-        // TODO: Move instruction operations somewhere else
-        // TODO: Unprototype this code
-        uint8_t op = (*program_memory)[program_counter];
-
-        uint8_t a = 0;
-        uint8_t b = 0;
-
         bool increment = true;
 
         try {
+            byte_t op = next_byte();
             increment = OPERATIONS[op](op, this);
         } catch (std::exception& err) {
 
@@ -41,12 +35,17 @@ namespace V502 {
         if (increment)
             program_counter += 1;
 
-        // TODO: Failure states, such as getting to the end of the program with nothing more, or faults!
+        // TODO: Faults?
+        if (program_counter >= program_memory->size())
+            return false;
+
         return true;
     }
 
-    // TODO: Nullptr check
     byte_t MOS6502::next_byte() {
+        if (!program_memory)
+            throw std::runtime_error("Program memory is a nullptr!");
+
         return program_memory->at(++program_counter);
     }
 
@@ -55,6 +54,9 @@ namespace V502 {
     }
 
     void MOS6502::store_at(word_t idx, byte_t val) {
+        if (!system_memory)
+            throw std::runtime_error("System memory is a nullptr!");
+
         system_memory->at(idx) = val;
     }
 
