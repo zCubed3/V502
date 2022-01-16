@@ -150,6 +150,15 @@ int main(int argc, char** argv) {
     while (cpu->cycle()) {
         std::cout << std::hex;
 
+        std::cout << "Flags: \n";
+        std::cout << "| C Z I D - B V N |\n";
+        std::cout << "| ";
+
+        for (uint8_t t = 0; t < 8; t++) {
+            std::cout << ((cpu->flags >> t) & 1) << " ";
+        }
+
+        std::cout << "|\n\n";
         std::cout << "Registers: \n";
         std::cout << "| X = " << +cpu->index_x << " | Y = " << +cpu->index_y << " | A = " << +cpu->accumulator << " |        \n\n";
 

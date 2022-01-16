@@ -23,7 +23,7 @@ namespace V502 {
     DEFINE_OPERATION(ADC) {
         switch (code) {
             case OpCode::ADC_NOW:
-                cpu->accumulator += cpu->next_byte();
+                cpu->add_with_overflow(cpu->accumulator, cpu->next_byte());
                 break;
         }
 
@@ -81,7 +81,7 @@ namespace V502 {
     // TODO: Not actually similar to the 6502 way of doing it!
     // TODO: Relative jumps and other stuff
     DEFINE_OPERATION(BEQ) {
-        if (cpu->flags & (MOS6502::Flags::Carry | MOS6502::Flags::Zero)) {
+        if (cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero) {
             cpu->program_counter += cpu->next_byte();
             return false;
         }

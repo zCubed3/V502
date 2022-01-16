@@ -58,6 +58,7 @@ namespace V502 {
         void store_at_page(byte_t page, byte_t idx, byte_t val);
         void jump(word_t idx);
         void compare(byte_t lhs, byte_t rhs);
+        void add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting = false);
 
         MOS6502();
         bool cycle();

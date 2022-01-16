@@ -68,7 +68,7 @@ namespace V502 {
     // CMP, CPX, and CPY
     void MOS6502::compare(byte_t lhs, byte_t rhs) {
         // TODO: More compact?
-        if (lhs > rhs)
+        if (lhs >= rhs)
             flags |= Flags::Carry;
         else
             flags &= ~Flags::Carry;
@@ -77,5 +77,17 @@ namespace V502 {
             flags |= Flags::Zero;
         else
             flags &= ~Flags::Zero;
+    }
+
+    // Checks if there was an overflow and sets the flag accordingly
+    void MOS6502::add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting) {
+        word_t r = lhs + (subtracting ? -(int8_t)rhs : rhs);
+
+        if (r < 0x00 || r > 0xFF)
+            flags |= Flags::Overflow;
+        else
+            flags &= ~Flags::Overflow;
+
+        accumulator = lhs + rhs;
     }
 }
