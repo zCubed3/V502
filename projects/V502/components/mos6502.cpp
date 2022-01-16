@@ -31,7 +31,6 @@ namespace V502 {
         if (increment)
             program_counter += 1;
 
-        // TODO: Faults?
         if (program_counter >= program_memory->size())
             return false;
 

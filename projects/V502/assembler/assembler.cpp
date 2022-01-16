@@ -66,7 +66,7 @@ namespace V502 {
         // We then have to split the lines again, this time by tokens, usually 6502 asm only has a lhs and rhs
         std::vector<std::pair<std::string, std::string>> pairs;
 
-        for (auto line : lines) {
+        for (auto line: lines) {
             std::stringstream line_stream(line);
             buffer.clear();
 
@@ -82,7 +82,7 @@ namespace V502 {
 
         // Then we have to determine what operation it is, and what variant of said instruction it is (now, ind_x, ind_y, zpg...)
         std::vector<uint8_t> bytes;
-        for (auto pair : pairs) {
+        for (auto pair: pairs) {
             // TODO: Add more instructions
             std::string lhs = pair.first;
             std::string rhs = pair.second;
@@ -138,8 +138,7 @@ namespace V502 {
 
                 if (trim)
                     rhs = rhs.substr(1);
-            }
-            else if (ident == '$') {
+            } else if (ident == '$') {
                 calling |= CallingFlags::ZeroPage; // If this is a byte
                 type = RhsType::Address;
             }
@@ -147,20 +146,23 @@ namespace V502 {
             OptOpCode opcode;
             bool word = rhs.length() > 2;
 
-            for (auto container : InstructionContainer::containers) {
+            for (auto container: InstructionContainer::containers) {
                 if (container.symbol == lhs) {
                     auto opt = container.get_code(calling, word);
                     if (opt.has_value())
                         opcode = opt;
                     else {
-                        std::cerr << lhs << " is an instruction, but the variant you're trying to use is invalid, please check your syntax!" << std::endl;
+                        std::cerr << lhs
+                                  << " is an instruction, but the variant you're trying to use is invalid, please check your syntax!"
+                                  << std::endl;
                         throw std::runtime_error("Instruction was recognized but variant was not!");
                     }
                 }
             }
 
             if (!opcode.has_value()) {
-                std::cerr << lhs << " is not a valid instruction, it either isn't recognized or implemented!" << std::endl;
+                std::cerr << lhs << " is not a valid instruction, it either isn't recognized or implemented!"
+                          << std::endl;
                 throw std::runtime_error("Unknown instruction!");
             }
 

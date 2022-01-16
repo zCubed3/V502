@@ -9,12 +9,9 @@ namespace V502 {
     class Memory;
 
     // The 6502 is represented here by its name because we might add the W65C02 some day!
-    // If we do that though a lot of stuff will have to shift around
+    // While that CPU isn't that much different it would still be useful to have!
     class MOS6502 {
     public:
-        // The 6502 is laid out as close to its real counterpart as possible
-        // We have a program counter, instruction decoder, etc...
-
         // TODO: Timing table and virtual CPU clock!
 
         //
@@ -22,7 +19,7 @@ namespace V502 {
         //
         word_t program_counter;
 
-        byte_t stack_ptr;
+        byte_t stack_ptr = 0xFF;
         byte_t accumulator;
         byte_t index_x;
         byte_t index_y;

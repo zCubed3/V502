@@ -160,7 +160,12 @@ int main(int argc, char** argv) {
 
         std::cout << "|\n\n";
         std::cout << "Registers: \n";
-        std::cout << "| X = " << +cpu->index_x << " | Y = " << +cpu->index_y << " | A = " << +cpu->accumulator << " |        \n\n";
+
+        std::cout << "| X = " << +cpu->index_x;
+        std::cout << " | Y = " << +cpu->index_y;
+        std::cout << " | A = " << +cpu->accumulator;
+        std::cout << " | S = " << +cpu->stack_ptr;
+        std::cout << " |        \n\n";
 
         std::cout << "Program Memory: \n";
         for (int x = 0; x < prog_memory->size() / 16; x++) {
