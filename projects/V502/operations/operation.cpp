@@ -82,11 +82,11 @@ namespace V502 {
     // TODO: Relative jumps and other stuff
     DEFINE_OPERATION(BEQ) {
         if (cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero) {
-            cpu->program_counter += cpu->next_byte();
+            cpu->program_counter = cpu->next_word();
             return false;
         }
         else
-            cpu->next_byte(); // Dispose of the jump
+            cpu->next_word(); // Dispose of the jump
 
         return true;
     }
