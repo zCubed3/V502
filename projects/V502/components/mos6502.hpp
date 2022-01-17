@@ -17,13 +17,13 @@ namespace V502 {
         //
         // Registers
         //
-        word_t program_counter;
+        word_t program_counter = 0x0000;
 
-        byte_t stack_ptr = 0xFF;
-        byte_t accumulator;
-        byte_t index_x;
-        byte_t index_y;
-        byte_t flags;
+        byte_t stack_ptr    = 0xFF;
+        byte_t accumulator  = 0x00;
+        byte_t index_x      = 0x00;
+        byte_t index_y      = 0x00;
+        byte_t flags        = 0x00;
 
         //
         // CPU Flags

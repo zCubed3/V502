@@ -7,11 +7,30 @@
 #include <vector>
 #include <iomanip> // for setw and setfill
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
+#ifdef __linux__
 #include <unistd.h>
+#endif
+
 #include <time.h>
 
 #define PAD_HEX_LO std::setfill('0') << std::setw(2)
 #define PAD_HEX std::setfill('0') << std::setw(4)
+
+void zero_cursor() {
+#ifdef _WIN32
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleCursorPosition(output, { 0, 0 });
+    std::cout << std::flush;
+#endif
+
+#ifdef __linux__
+    std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
+#endif
+}
 
 void print_help() {
     std::cout << "Arguments: \n";
@@ -131,13 +150,14 @@ int main(int argc, char** argv) {
     bin_file.close();
 
     // This is the best it gets without ncurses!
-    std::cout << "\033[" << 0 << ";" << 0 << "H" << std::endl;
+    zero_cursor();
+    std::cout << std::endl;
     for (int h = 0; h < 60; h++) {
         for (int x = 0; x < 512; x++)
             std::cout << " ";
         std::cout << std::endl;
     }
-    std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
+    zero_cursor();
 
     timespec wait = {};
     wait.tv_nsec = 1000; // 1mhz
@@ -193,16 +213,31 @@ int main(int argc, char** argv) {
 
                 int value = +sys_memory->at(idx);
 
-                if (cpu->program_counter == idx)
-                    std::cout<<"\033[1;4;93m";
+                if (cpu->program_counter == idx) {
+#if __linux__
+                    std::cout << "\033[1;4;93m";
+#endif
+
+#if _WIN32
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | COMMON_LVB_UNDERSCORE);
+#endif
+            }
 
                 if (value < 16)
                     std::cout << "0";
 
                 std::cout << value;
 
-                if (cpu->program_counter == idx)
-                    std::cout<<"\033[0m";
+                if (cpu->program_counter == idx) {
+#if __linux__
+
+                    std::cout << "\033[0m";
+#endif
+
+#if _WIN32
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+#endif
+                }
 
                 std::cout << " ";
             }
@@ -234,12 +269,21 @@ int main(int argc, char** argv) {
             std::cout << "\n";
         }
 
+#ifdef __linux__
         if (custom_time)
             usleep(interval * 1000);
         else
             nanosleep(&wait, nullptr);
+#endif
 
-        std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
+#ifdef _WIN32
+        if (custom_time)
+            Sleep(interval);
+        //else
+            //throw std::runtime_error("Sorry windows doesn't support nanosleep() so you must provide an interval!");
+#endif
+
+        zero_cursor();
     }
 
     return 0;

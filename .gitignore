@@ -52,6 +52,8 @@ Mkfile.old
 dkms.conf
 
 # My stuff
+.vs
 .idea
 cmake-*
 bin
+out
