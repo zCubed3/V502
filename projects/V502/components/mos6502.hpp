@@ -57,6 +57,7 @@ namespace V502 {
         void add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting = false);
         void reset();
         byte_t get_at_page(byte_t page, byte_t idx);
+        void jump_page(byte_t page, byte_t idx);
 
         MOS6502();
         bool cycle();

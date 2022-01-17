@@ -6,8 +6,7 @@
 
 ### Platform Support
 * Linux
-* Windows (TODO but should work with minimal changes!)
-* Any POSIX platform supporting `time.h` and GCC/Clang with C++17 (ex: FreeBSD)
+* Windows
 
 ### Features
 * Static Library! Can be linked into any program and used for anything you want!

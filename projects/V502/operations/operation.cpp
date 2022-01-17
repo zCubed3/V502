@@ -15,6 +15,12 @@ namespace V502 {
             case OpCode::JMP_ABS:
                 cpu->jump(cpu->next_word());
                 break;
+
+            case OpCode::JMP_IND: {
+                word_t where = cpu->next_word();
+                cpu->jump_page(cpu->system_memory->at(where), cpu->system_memory->at(where + 1));
+                break;
+            }
         }
 
         return false;
@@ -48,13 +54,9 @@ namespace V502 {
         return true;
     }
 
-    DEFINE_OPERATION(INX) {
-        cpu->index_x += 1;
-        return true;
-    }
-
-    DEFINE_OPERATION(INY) {
-        cpu->index_y += 1;
+    // INX and INY are lopped into this
+    DEFINE_OPERATION(INC) {
+        (code == INX ? cpu->index_x : cpu->index_y) += 1;
         return true;
     }
 
@@ -89,29 +91,26 @@ namespace V502 {
         return true;
     }
 
+    DEFINE_OPERATION(LDA) {
+        cpu->accumulator = cpu->next_byte();
+        return true;
+    }
+
     DEFINE_OPERATION(LDX) {
         cpu->index_x = cpu->next_byte();
         return true;
     }
 
-    DEFINE_OPERATION(PHA) {
-        cpu->store_at_page(0x01, cpu->stack_ptr--, cpu->accumulator);
+    //
+    // Push and pull, encapsulating both sets of operations
+    //
+    DEFINE_OPERATION(PSH) {
+        cpu->store_at_page(0x01, cpu->stack_ptr--, (code == PLP ? cpu->flags : cpu->accumulator));
         return true;
     }
 
-    DEFINE_OPERATION(PHP) {
-        cpu->store_at_page(0x01, cpu->stack_ptr--, cpu->flags);
-        return true;
-    }
-
-    DEFINE_OPERATION(PLA) {
-        cpu->accumulator = cpu->get_at_page(0x01, ++cpu->stack_ptr);
-        cpu->store_at_page(0x01, cpu->stack_ptr, 0x00);
-        return true;
-    }
-
-    DEFINE_OPERATION(PLP) {
-        cpu->flags = cpu->get_at_page(0x01, ++cpu->stack_ptr);
+    DEFINE_OPERATION(PLL) {
+        (code == PLP ? cpu->flags : cpu->accumulator) = cpu->get_at_page(0x01, ++cpu->stack_ptr);
         cpu->store_at_page(0x01, cpu->stack_ptr++, 0x00);
         return true;
     }
@@ -125,21 +124,21 @@ namespace V502 {
 
     const instruction_t OPERATIONS[256] = {
             /*      0       1       2       3       4       5       6       7       8       9       A       B       C       D       E       F   */
-            /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PHP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 1 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_NOP, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 2 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 2 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 3 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PHA, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
+            /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 5 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLA, OP_ADC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
-            /* A */ INVLID, INVLID, OP_LDX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* A */ INVLID, INVLID, OP_LDX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* B */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INY, OP_CMP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* F */ OP_BEQ, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID
     };
 }

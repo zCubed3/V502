@@ -104,4 +104,8 @@ namespace V502 {
 
         return system_memory->at(make_word(page, idx));
     }
+
+    void MOS6502::jump_page(byte_t page, byte_t idx) {
+        program_counter = make_word(page, idx);
+    }
 }

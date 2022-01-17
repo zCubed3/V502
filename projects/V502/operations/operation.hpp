@@ -26,41 +26,55 @@ namespace V502 {
         //TODO: More instructions
 
         //
-        // Stack operations
+        // X Register
         //
-        PHA         = 0x48,
-        PLA         = 0x68,
-        PHP         = 0x08,
-        PLP         = 0x28,
-
-        //
-        // Misc
-        //
-        NOP         = 0x1A,
-
         INX         = 0xE8,
-
-        INY         = 0xC8,
-
-        LDA_NOW     = 0xA9,
 
         LDX_NOW     = 0xA2,
 
-        ADC_NOW     = 0x69,
+        CPX_NOW     = 0xE0,
 
-        JMP_ABS     = 0x4C,
+        //
+        // Y Register
+        //
+        INY         = 0xC8,
 
+        //
+        // A Register
+        //
         STA_ZPG     = 0x85,
         STA_X_ZPG   = 0x95,
         STA_ABS     = 0x8D,
         STA_X_ABS   = 0x9D,
         STA_Y_ABS   = 0x99,
 
+        PHA         = 0x48,
+        PLA         = 0x68,
+
+        LDA_NOW     = 0xA9,
+
+        ADC_NOW     = 0x69,
+
         CMP_NOW     = 0xC9,
 
-        CPX_NOW     = 0xE0,
+        //
+        // State register
+        //
+        PHP         = 0x08,
+        PLP         = 0x28,
+
+        //
+        // Flow
+        //
+        JMP_ABS     = 0x4C,
+        JMP_IND     = 0x6C,
 
         BEQ         = 0xF0,
+
+        //
+        // Misc
+        //
+        NOP         = 0x1A, // Not a real instruction but some assemblers provide it as a way to waste cycles
     };
 
     extern const instruction_t OPERATIONS[256];

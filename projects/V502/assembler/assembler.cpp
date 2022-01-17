@@ -171,8 +171,8 @@ namespace V502 {
 
             if (ident == '(') { // Is this indirect? (or deferred?)
                 // If it's indirect, ident is wrong
-                ident = rhs[0];
                 rhs = rhs.substr(1);
+                ident = rhs[0];
                 rhs.pop_back();
 
                 calling |= CallingFlags::Indirect;
@@ -214,9 +214,18 @@ namespace V502 {
             } else if (ident == '$') {
                 calling |= CallingFlags::ZeroPage; // If this is a byte
                 type = RhsType::Address;
+                rhs = rhs.substr(1);
             } else if (!rhs.empty()) { // This is most likely a label
                 unresolved_tokens.emplace_back(std::make_tuple(line, rhs, write + 1));
-                rhs = "FFFF"; // Placeholder
+
+                // If the indexer symbols are found, we shorten the placeholder
+                bool shorter = false;
+                auto indexer = rhs.find('[');
+                if (indexer != std::string::npos && rhs.back() == ']')
+                    shorter = true;
+
+                rhs = shorter ? "FF" : "FFFF"; // Placeholder
+
                 type = RhsType::HexNumber;
             }
 
@@ -271,6 +280,28 @@ namespace V502 {
             std::string target = std::get<1>(token);
             word_t offset = std::get<2>(token);
 
+            // Is there an indexer at the end?
+            std::optional<byte_t> label_indexer;
+            auto indexer = target.find('[');
+            if (indexer != std::string::npos && target.back() == ']') {
+                // We need to extract the number in the middle
+                char num = target[indexer + 1];
+
+                if (!isdigit(num)) {
+                    std::cerr << "Line " << line << ": '" << target << "' has an invalid label indexer!" << std::endl;
+                    throw std::runtime_error("Indexer is either empty or has an invalid character!");
+                }
+
+                label_indexer = num - '0';
+
+                if (label_indexer > 2) { // TODO: Named arrays?
+                    std::cerr << "Line " << line << ": '" << target << "' indexer is out of range, valid indexers are 0 and 1!" << std::endl;
+                    throw std::runtime_error("Indexer is out of range!");
+                }
+
+                target = target.substr(0, indexer);
+            }
+
             if (labels.count(target) != 0) {
                 auto resolve = labels[target].second;
 
@@ -281,8 +312,15 @@ namespace V502 {
 
                 word_t final = resolve.value();
 
-                bytes[offset] = final >> 8;
-                bytes[offset + 1] = final;
+                if (label_indexer.has_value()) {
+                    if (label_indexer == 0)
+                        bytes[offset] = final >> 8;
+                    else
+                        bytes[offset] = final;
+                } else {
+                    bytes[offset] = final >> 8;
+                    bytes[offset + 1] = final;
+                }
             } else {
                 std::cerr << "Line " << line << ": Unknown token '"<< target << "'! Did you forget to define a label?" << std::endl;
                 throw std::runtime_error("Unknown token for label!");
