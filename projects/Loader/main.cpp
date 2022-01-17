@@ -248,10 +248,9 @@ int main(int argc, char** argv) {
         std::cout << "\n";
 
         std::cout << "System Memory: \n";
-        for (int x = 0; x < 16; x++) { // TODO: Show more than the zero page
-            // I hate C++ syntax at times...
-            std::cout << std::setfill('0') << std::setw(4) << x * 16 << " -> ";
-            std::cout << std::setfill('0') << std::setw(4) << ((x + 1) * 16) - 1 << ": ";
+        for (int x = 0; x < 16; x++) {
+            std::cout << PAD_HEX << x * 16 << " -> ";
+            std::cout << PAD_HEX << ((x + 1) * 16) - 1 << ": ";
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
@@ -264,6 +263,26 @@ int main(int argc, char** argv) {
                     std::cout << "0";
 
                 std::cout << value << " ";
+            }
+
+            std::cout << "\n";
+        }
+
+        std::cout << "\n";
+        std::cout << "Stack Memory: \n";
+        for (int x = 0; x < 16; x++) {
+            // I hate C++ syntax at times...
+            std::cout << "01" << PAD_HEX_LO << x * 16 << " -> ";
+            std::cout << "01" << PAD_HEX_LO << ((x + 1) * 16) - 1 << ": ";
+
+            for (int y = 0; y < 16; y++) {
+                int idx = x * 16 + y;
+                if (idx >= sys_memory->size())
+                    break;
+
+                int value = +cpu->get_at_page(0x01, idx);
+
+                std::cout << PAD_HEX_LO << value << " ";
             }
 
             std::cout << "\n";

@@ -25,6 +25,17 @@ namespace V502 {
     enum OpCode : byte_t {
         //TODO: More instructions
 
+        //
+        // Stack operations
+        //
+        PHA         = 0x48,
+        PLA         = 0x68,
+        PHP         = 0x08,
+        PLP         = 0x28,
+
+        //
+        // Misc
+        //
         NOP         = 0x1A,
 
         INX         = 0xE8,

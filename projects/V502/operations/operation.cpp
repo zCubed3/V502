@@ -78,8 +78,6 @@ namespace V502 {
         return true;
     }
 
-    // TODO: Not actually similar to the 6502 way of doing it!
-    // TODO: Relative jumps and other stuff
     DEFINE_OPERATION(BEQ) {
         if (cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero) {
             cpu->program_counter = cpu->next_word();
@@ -96,6 +94,28 @@ namespace V502 {
         return true;
     }
 
+    DEFINE_OPERATION(PHA) {
+        cpu->store_at_page(0x01, cpu->stack_ptr--, cpu->accumulator);
+        return true;
+    }
+
+    DEFINE_OPERATION(PHP) {
+        cpu->store_at_page(0x01, cpu->stack_ptr--, cpu->flags);
+        return true;
+    }
+
+    DEFINE_OPERATION(PLA) {
+        cpu->accumulator = cpu->get_at_page(0x01, ++cpu->stack_ptr);
+        cpu->store_at_page(0x01, cpu->stack_ptr, 0x00);
+        return true;
+    }
+
+    DEFINE_OPERATION(PLP) {
+        cpu->flags = cpu->get_at_page(0x01, ++cpu->stack_ptr);
+        cpu->store_at_page(0x01, cpu->stack_ptr++, 0x00);
+        return true;
+    }
+
     DEFINE_OPERATION(BAD) {
         std::cerr << "0x" << std::hex << +code << std::dec << " is an invalid instruction!" << std::endl;
         throw std::runtime_error("Illegal instruction call! Either it doesn't exist or isn't defined yet!");
@@ -105,13 +125,13 @@ namespace V502 {
 
     const instruction_t OPERATIONS[256] = {
             /*      0       1       2       3       4       5       6       7       8       9       A       B       C       D       E       F   */
-            /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PHP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 1 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_NOP, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 2 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 2 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 3 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
+            /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PHA, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 5 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLA, OP_ADC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
