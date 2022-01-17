@@ -106,7 +106,7 @@ namespace V502 {
             case LDA_ZPG:
             case LDA_X_ZPG: {
                 byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
-                //val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                cpu->accumulator = cpu->get_at_page(0x00, cpu->next_byte() + offset);
                 break;
             }
 
