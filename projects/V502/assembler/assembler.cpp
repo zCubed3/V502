@@ -139,8 +139,8 @@ namespace V502 {
             std::cout << "Explicit origin not provided, '.org', using default origin " << std::hex << ASM_BASE_ORIGIN << std::endl;
 
         // We tell the system where the program begins
-        bytes[0xFFFC] = origin >> 8;
-        bytes[0xFFFD] = origin;
+        bytes[0xFFFC] = origin;
+        bytes[0xFFFD] = origin >> 8; // Writing words is backwards!
 
         std::vector<std::tuple<uint16_t, std::string, uint16_t>> unresolved_tokens;
 
@@ -255,6 +255,7 @@ namespace V502 {
             bytes[write++] = opcode.value();
 
             if (rhs.length() > 0) {
+                std::vector<uint8_t> args;
                 for (int x = 0; x < rhs.length(); x += 2) {
                     int radix = 10;
 
@@ -269,8 +270,12 @@ namespace V502 {
                     }
 
                     std::string tok = rhs.substr(x, 2);
-                    bytes[write++] = std::stoi(tok, 0, radix);
+                    args.emplace_back(std::stoi(tok, 0, radix));
                 }
+
+                std::reverse(args.begin(), args.end());
+                for (auto arg : args)
+                    bytes[write++] = arg;
             }
         }
 
@@ -314,12 +319,12 @@ namespace V502 {
 
                 if (label_indexer.has_value()) {
                     if (label_indexer == 0)
-                        bytes[offset] = final >> 8;
-                    else
                         bytes[offset] = final;
+                    else
+                        bytes[offset] = final >> 8;
                 } else {
-                    bytes[offset] = final >> 8;
-                    bytes[offset + 1] = final;
+                    bytes[offset] = final;
+                    bytes[offset + 1] = final >> 8;
                 }
             } else {
                 std::cerr << "Line " << line << ": Unknown token '"<< target << "'! Did you forget to define a label?" << std::endl;

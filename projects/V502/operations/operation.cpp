@@ -18,7 +18,7 @@ namespace V502 {
 
             case OpCode::JMP_IND: {
                 word_t where = cpu->next_word();
-                cpu->jump_page(cpu->system_memory->at(where), cpu->system_memory->at(where + 1));
+                cpu->jump_page(cpu->system_memory->at(where + 1), cpu->system_memory->at(where));
                 break;
             }
         }
@@ -92,10 +92,9 @@ namespace V502 {
     }
 
     DEFINE_OPERATION(LDA) {
-        byte_t val;
         switch (code) {
             case LDA_NOW:
-                val = cpu->next_byte();
+                cpu->accumulator = cpu->next_byte();
                 break;
 
             case LDA_ABS:
@@ -107,16 +106,17 @@ namespace V502 {
             case LDA_ZPG:
             case LDA_X_ZPG: {
                 byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
-                val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                //val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
                 break;
             }
 
-            case LDA_ZPG:
-            case LDA_X_ZPG: {
-                byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
-                val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+            case LDA_X_IND: {
+                cpu->accumulator = cpu->get_indirect(0x00, cpu->next_byte() + cpu->index_x);
                 break;
             }
+
+            //case LDA_Y_IND:
+
         }
     }
 

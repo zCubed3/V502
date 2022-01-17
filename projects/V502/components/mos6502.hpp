@@ -51,7 +51,7 @@ namespace V502 {
         // If you forget this the CPU will throw an exception!
         Memory *system_memory;
 
-        // Helpers for operations to reduce repeated code
+        // Helpers for operations to consolidate behavior
         byte_t next_byte();
         word_t next_word();
         void store_at(word_t idx, byte_t val);
@@ -63,6 +63,7 @@ namespace V502 {
         byte_t get_at_page(byte_t page, byte_t idx);
         void jump_page(byte_t page, byte_t idx);
         void load(RegisterIndex reg, byte_t val);
+        byte_t get_indirect(byte_t page, byte_t idx, byte_t post_fetch = 0);
 
         MOS6502();
         bool cycle();

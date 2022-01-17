@@ -44,7 +44,7 @@ namespace V502 {
         if (!system_memory)
             throw std::runtime_error("System memory is a nullptr!");
 
-        word_t word = make_word(system_memory->at(program_counter + 1), system_memory->at(program_counter + 2));
+        word_t word = make_word(system_memory->at(program_counter + 2), system_memory->at(program_counter + 1));
         program_counter += 2;
         return word;
     }
@@ -95,7 +95,7 @@ namespace V502 {
             throw std::runtime_error("System memory is a nullptr!");
 
         flags = 0;
-        program_counter = make_word(system_memory->at(0xFFFC), system_memory->at(0xFFFD));
+        program_counter = make_word(system_memory->at(0xFFFD), system_memory->at(0xFFFC));
     }
 
     byte_t MOS6502::get_at_page(byte_t page, byte_t idx) {
@@ -121,5 +121,9 @@ namespace V502 {
                 break;
         }
         target = val;
+    }
+
+    byte_t MOS6502::get_indirect(byte_t page, byte_t idx, byte_t post_fetch) {
+        return get_at_page(get_at_page(page, idx) + post_fetch, get_at_page(page, idx + 1) + post_fetch);
     }
 }
