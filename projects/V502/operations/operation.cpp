@@ -92,8 +92,32 @@ namespace V502 {
     }
 
     DEFINE_OPERATION(LDA) {
-        cpu->accumulator = cpu->next_byte();
-        return true;
+        byte_t val;
+        switch (code) {
+            case LDA_NOW:
+                val = cpu->next_byte();
+                break;
+
+            case LDA_ABS:
+            case LDA_X_ABS:
+            case LDA_Y_ABS: {
+                break;
+            }
+
+            case LDA_ZPG:
+            case LDA_X_ZPG: {
+                byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
+                val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                break;
+            }
+
+            case LDA_ZPG:
+            case LDA_X_ZPG: {
+                byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
+                val = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                break;
+            }
+        }
     }
 
     DEFINE_OPERATION(LDX) {
@@ -134,8 +158,8 @@ namespace V502 {
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
-            /* A */ INVLID, INVLID, OP_LDX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* B */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* A */ INVLID, OP_LDA, OP_LDX, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
+            /* B */ INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
             /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,

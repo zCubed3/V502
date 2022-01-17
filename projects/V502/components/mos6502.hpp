@@ -43,6 +43,10 @@ namespace V502 {
         // Memory
         //
 
+        enum RegisterIndex : byte_t {
+            A, X, Y
+        };
+
         // Just like the real deal, it's a DIY sort of deal here! Provide your own memory!
         // If you forget this the CPU will throw an exception!
         Memory *system_memory;
@@ -58,6 +62,7 @@ namespace V502 {
         void reset();
         byte_t get_at_page(byte_t page, byte_t idx);
         void jump_page(byte_t page, byte_t idx);
+        void load(RegisterIndex reg, byte_t val);
 
         MOS6502();
         bool cycle();

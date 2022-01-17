@@ -106,7 +106,7 @@ namespace V502 {
         // A Register
         //
         { "STA", STA_ZPG, STA_X_ZPG, {}, STA_ABS, {}, {}, {}, {}, {}, {}, {}, false },
-        { "LDA", {}, {}, {}, {}, {}, {}, {}, {}, {}, LDA_NOW, {}, false },
+        { "LDA", LDA_ZPG, LDA_X_ZPG, {}, LDA_ABS, LDA_X_ABS, LDA_Y_ABS, {}, LDA_X_IND, LDA_Y_IND, LDA_NOW, {}, false },
 
         //
         // Flow

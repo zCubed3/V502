@@ -108,4 +108,18 @@ namespace V502 {
     void MOS6502::jump_page(byte_t page, byte_t idx) {
         program_counter = make_word(page, idx);
     }
+
+    void MOS6502::load(RegisterIndex reg, byte_t val) {
+        byte_t& target = accumulator;
+        switch (reg) {
+            case RegisterIndex::X:
+                target = index_x;
+                break;
+
+            case RegisterIndex::Y:
+                target = index_y;
+                break;
+        }
+        target = val;
+    }
 }

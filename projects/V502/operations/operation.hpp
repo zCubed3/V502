@@ -52,6 +52,13 @@ namespace V502 {
         PLA         = 0x68,
 
         LDA_NOW     = 0xA9,
+        LDA_ZPG     = 0xA5,
+        LDA_X_ZPG   = 0xB5,
+        LDA_ABS     = 0xAD,
+        LDA_X_ABS   = 0xBD,
+        LDA_Y_ABS   = 0xB9,
+        LDA_X_IND   = 0xA1,
+        LDA_Y_IND   = 0xB1,
 
         ADC_NOW     = 0x69,
 
