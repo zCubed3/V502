@@ -10,11 +10,15 @@ set(V502GUI_Sources
 )
 
 if (DEFINED WIN32)
-
+    set(V502GUI_Libs opengl32 glew32 glfw3)
 else()
     set(V502GUI_Libs GL GLEW glfw dl)
 endif()
 
 add_executable(V502GUI ${V502GUI_Sources})
 target_link_libraries(V502GUI V502Lib ${V502GUI_Libs})
-target_include_directories(V502GUI PUBLIC ${PROJECTS_DIR} "dependencies/imgui")
+target_include_directories(V502GUI PUBLIC ${PROJECTS_DIR} "dependencies/imgui" "include")
+
+if (DEFINED WIN32)
+    target_link_directories(V502GUI PUBLIC "dependencies")
+endif()
