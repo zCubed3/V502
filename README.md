@@ -14,4 +14,6 @@
 * 6502 assembler (give it a .s file and it'll compile a .bin of it!)
 
 ### Third Party Software Used
+#### [Credits](CREDITS)
+
 #### [imgui](https://github.com/ocornut/imgui/) - MIT License [here](https://github.com/ocornut/imgui/blob/master/LICENSE.txt)
