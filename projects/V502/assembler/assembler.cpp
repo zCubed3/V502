@@ -168,9 +168,10 @@ namespace V502 {
             }
 
             if (ident == '(') { // Is this indirect? (or deferred?)
-                // If it's indirect, ident is wrong
+                // If it's indirect, correct the ident
                 rhs = rhs.substr(1);
                 ident = rhs[0];
+                rhs = rhs.substr(1);
 
                 auto closing = rhs.find(')');
                 if (closing == std::string::npos) {
