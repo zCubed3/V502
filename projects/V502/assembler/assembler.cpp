@@ -55,6 +55,14 @@ namespace V502 {
             if (buffer.empty())
                 continue;
 
+            // Trim tabs and spaces
+            while (buffer[0] == '\t' || buffer[0] == ' ')
+                buffer = buffer.substr(1);
+
+            // Trim trailing spaces
+            while (buffer.back() == ' ')
+                buffer.pop_back();
+
             // If this line starts with ; we discard it, it's a comment
             if (buffer[0] == ';')
                 continue;
@@ -62,14 +70,6 @@ namespace V502 {
             auto comment = buffer.find(";");
             if (comment != std::string::npos)
                 buffer = buffer.substr(0, comment);
-
-            // Trim trailing spaces
-            while (buffer.back() == ' ')
-                buffer.pop_back();
-
-            // Trim tabs
-            while (buffer[0] == '\t')
-                buffer = buffer.substr(1);
 
             std::transform(buffer.begin(), buffer.end(), buffer.begin(), toupper); // Converts everything to uppercase
             lines.emplace_back(buffer);
