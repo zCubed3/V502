@@ -15,13 +15,14 @@ test:
   tya
   dey
   tay
-  ; ldy #$FF
+  ; ldy #$00
 
   ; Accumulator
   lda #$09
   adc #$01
   sta $00
   sbc #$05
+  sta $FF
 
   lda $00 ; zpg
   lda $00,X ; zpg + x
