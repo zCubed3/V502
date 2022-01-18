@@ -29,6 +29,10 @@ namespace V502 {
         // X Register
         //
         INX         = 0xE8,
+        DEX         = 0xCA,
+
+        TAX         = 0xAA,
+        TXA         = 0x8A,
 
         LDX_NOW     = 0xA2,
 
@@ -38,6 +42,10 @@ namespace V502 {
         // Y Register
         //
         INY         = 0xC8,
+        DEY         = 0x88,
+
+        TAY         = 0xA8,
+        TYA         = 0x98,
 
         //
         // A Register

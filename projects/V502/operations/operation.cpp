@@ -60,6 +60,24 @@ namespace V502 {
         return true;
     }
 
+    // DEX and DEY are lopped into this
+    DEFINE_OPERATION(DEC) {
+        (code == DEX ? cpu->index_x : cpu->index_y) -= 1;
+        return true;
+    }
+
+    // TXA and TYA are lopped into this
+    DEFINE_OPERATION(TRA) {
+        cpu->accumulator = (code == TXA ? cpu->index_x : cpu->index_y);
+        return true;
+    }
+
+    // TAX and TAY are lopped into this
+    DEFINE_OPERATION(TAR) {
+        (code == TAX ? cpu->index_x : cpu->index_y) = cpu->accumulator;
+        return true;
+    }
+
     DEFINE_OPERATION(CMP) {
         switch (code) {
             case CMP_NOW:
@@ -85,9 +103,8 @@ namespace V502 {
             cpu->program_counter = cpu->next_word();
             return false;
         }
-        else
-            cpu->next_word(); // Dispose of the jump
-
+        
+        cpu->next_word(); // Dispose of the jump
         return true;
     }
 
@@ -100,6 +117,8 @@ namespace V502 {
             case LDA_ABS:
             case LDA_X_ABS:
             case LDA_Y_ABS: {
+                byte_t offset = (code == LDA_ABS ? 0 : (code == LDA_X_ABS ? cpu->index_x : cpu->index_y));
+                cpu->accumulator = cpu->get_at(cpu->next_word() + offset);
                 break;
             }
 
@@ -180,11 +199,11 @@ namespace V502 {
             /* 5 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 6 */ OP_RTS, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
-            /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
-            /* A */ INVLID, OP_LDA, OP_LDX, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
+            /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_DEC, INVLID, OP_TRA, INVLID, INVLID, OP_STA, INVLID, INVLID,
+            /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_TRA, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
+            /* A */ INVLID, OP_LDA, OP_LDX, INVLID, INVLID, OP_LDA, INVLID, INVLID, OP_TAR, OP_LDA, OP_TAR, INVLID, INVLID, OP_LDA, INVLID, INVLID,
             /* B */ INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
-            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, OP_DEC, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* F */ OP_BEQ, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID

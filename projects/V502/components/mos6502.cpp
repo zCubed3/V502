@@ -78,13 +78,15 @@ namespace V502 {
     }
 
     // Checks if there was an overflow and sets the flag accordingly
+    // Since ADC and SDC use this, we set carry equal to overflow
     void MOS6502::add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting) {
         word_t r = lhs + (subtracting ? -(int8_t)rhs : rhs);
 
         if (r < 0x00 || r > 0xFF)
-            flags |= Flags::Overflow;
-        else
-            flags &= ~Flags::Overflow;
+            flags |= (Flags::Overflow | Flags::Carry);
+        else {
+            flags &= ~(Flags::Overflow | Flags::Carry);
+        }
 
         accumulator = lhs + rhs;
     }
@@ -96,6 +98,13 @@ namespace V502 {
 
         flags = 0;
         program_counter = make_word(system_memory->at(0xFFFD), system_memory->at(0xFFFC));
+    }
+
+    byte_t MOS6502::get_at(word_t idx) {
+        if (!system_memory)
+            throw std::runtime_error("System memory is a nullptr!");
+
+        return system_memory->at(idx);
     }
 
     byte_t MOS6502::get_at_page(byte_t page, byte_t idx) {
