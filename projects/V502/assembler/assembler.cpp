@@ -219,7 +219,6 @@ namespace V502 {
             } else if (ident == '$') {
                 calling |= CallingFlags::ZeroPage; // If this is a byte
                 type = RhsType::Address;
-                rhs = rhs.substr(1);
             } else if (!rhs.empty()) { // This is most likely a label
                 unresolved_tokens.emplace_back(std::make_tuple(line, rhs, write + 1));
 
