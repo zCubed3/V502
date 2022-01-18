@@ -154,7 +154,50 @@ namespace V502 {
     }
 
     DEFINE_OPERATION(LDX) {
-        cpu->index_x = cpu->next_byte();
+        switch (code) {
+            case LDX_NOW:
+                cpu->index_x = cpu->next_byte();
+                break;
+
+            case LDX_ABS:
+            case LDX_Y_ABS: {
+                byte_t offset = (code == LDX_ABS ? 0 : cpu->index_y);
+                cpu->index_x = cpu->get_at(cpu->next_word() + offset);
+                break;
+            }
+
+            case LDX_ZPG:
+            case LDX_Y_ZPG: {
+                byte_t offset = (code == LDX_ZPG ? 0 : cpu->index_y);
+                cpu->index_x = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    DEFINE_OPERATION(LDY) {
+        switch (code) {
+            case LDY_NOW:
+                cpu->index_y = cpu->next_byte();
+                break;
+
+            case LDY_ABS:
+            case LDY_X_ABS: {
+                byte_t offset = (code == LDY_ABS ? 0 : cpu->index_x);
+                cpu->index_y = cpu->get_at(cpu->next_word() + offset);
+                break;
+            }
+
+            case LDY_ZPG:
+            case LDY_X_ZPG: {
+                byte_t offset = (code == LDY_ZPG ? 0 : cpu->index_x);
+                cpu->index_y = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                break;
+            }
+        }
+
         return true;
     }
 
@@ -211,7 +254,7 @@ namespace V502 {
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_DEC, INVLID, OP_TRA, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_TRA, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
-            /* A */ INVLID, OP_LDA, OP_LDX, INVLID, INVLID, OP_LDA, INVLID, INVLID, OP_TAR, OP_LDA, OP_TAR, INVLID, INVLID, OP_LDA, INVLID, INVLID,
+            /* A */ OP_LDY, OP_LDA, OP_LDX, INVLID, INVLID, OP_LDA, INVLID, INVLID, OP_TAR, OP_LDA, OP_TAR, INVLID, INVLID, OP_LDA, INVLID, INVLID,
             /* B */ INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
             /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, OP_DEC, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,

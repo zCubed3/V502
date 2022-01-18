@@ -33,8 +33,14 @@ namespace V502 {
 
         TAX         = 0xAA,
         TXA         = 0x8A,
+        TXS         = 0x9A,
+        TSX         = 0xBA,
 
         LDX_NOW     = 0xA2,
+        LDX_ZPG     = 0xA6,
+        LDX_Y_ZPG   = 0xB6,
+        LDX_ABS     = 0xAE,
+        LDX_Y_ABS   = 0xBE,
 
         CPX_NOW     = 0xE0,
 
@@ -46,6 +52,12 @@ namespace V502 {
 
         TAY         = 0xA8,
         TYA         = 0x98,
+
+        LDY_NOW     = 0xA0,
+        LDY_ZPG     = 0xA4,
+        LDY_X_ZPG   = 0xB4,
+        LDY_ABS     = 0xAC,
+        LDY_X_ABS   = 0xBC,
 
         //
         // A Register

@@ -15,7 +15,7 @@ test:
   tya
   dey
   tay
-  ; ldy #$00
+  ldy #$FF
 
   ; Accumulator
   lda #$09
@@ -29,8 +29,8 @@ test:
   lda $0000 ; abs
   lda $0000,X ; abs + x
   lda $0000,Y ; abs + y
-  lda ($00,X) ; zpg + x, indirect
-  lda ($00),Y ; zpg, indirect + y
+  lda ($01,X) ; zpg + x, indirect
+  lda ($01),Y ; zpg, indirect + y
 
   ; Flow
   jsr sub_stack
