@@ -4,7 +4,7 @@
 #include <cstring>
 
 namespace V502 {
-    Memory::Memory(uint16_t desired_size) {
+    Memory::Memory(uint32_t desired_size) {
         buffer = new uint8_t[desired_size];
         length = desired_size;
 

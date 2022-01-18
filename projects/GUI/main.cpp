@@ -79,9 +79,6 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                if (idx >= sys_memory->size())
-                    break;
-
                 int value = +cpu->get_at_page(page_number, idx);
                 memory_stream << PAD_HEX_LO << value << " ";
             }

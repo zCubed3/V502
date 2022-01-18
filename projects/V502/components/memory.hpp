@@ -11,10 +11,10 @@ namespace V502 {
     class Memory {
         // All memory really is a giant uint8_t block!
         byte_t *buffer;
-        word_t length;
+        uint32_t length;
 
     public:
-        Memory(word_t desired_size);
+        Memory(uint32_t desired_size);
 
         void copy_from(std::ifstream &file);
 
