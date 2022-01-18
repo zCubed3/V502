@@ -140,7 +140,7 @@ namespace V502 {
         bytes[0xFFFC] = origin;
         bytes[0xFFFD] = origin >> 8; // Writing words is backwards!
 
-        std::vector<std::tuple<uint16_t, std::string, uint16_t>> unresolved_tokens;
+        std::vector<std::tuple<uint16_t, std::string, uint16_t, bool>> unresolved_tokens;
 
         // Then we have to determine what operation it is, and what variant of said instruction it is (now, ind_x, ind_y, zpg...)
         // If an instruction relies on a label, it gets pushed into the post processor
@@ -221,13 +221,24 @@ namespace V502 {
                 calling |= CallingFlags::ZeroPage; // If this is a byte
                 type = RhsType::Address;
             } else if (!rhs.empty()) { // This is most likely a label
-                unresolved_tokens.emplace_back(std::make_tuple(line, rhs, write + 1));
+                // Check if the instruction marks this as relative
+                bool relative = false;
+
+                for (auto container: InstructionContainer::containers) {
+                    if (container.symbol == lhs) {
+                        relative = container.relative;
+                        break;
+                    }
+                }
+
+                unresolved_tokens.emplace_back(std::make_tuple(line, rhs, write + 1, relative));
 
                 // If the indexer symbols are found, we shorten the placeholder
-                bool shorter = false;
+                bool shorter = relative; // Relative symbols are bytes!
                 auto indexer = rhs.find('[');
-                if (indexer != std::string::npos && rhs.back() == ']')
-                    shorter = true;
+
+                if (!shorter)
+                    shorter = indexer != std::string::npos && rhs.back() == ']';
 
                 rhs = shorter ? "FF" : "FFFF"; // Placeholder
 
@@ -289,6 +300,7 @@ namespace V502 {
             word_t line = std::get<0>(token);
             std::string target = std::get<1>(token);
             word_t offset = std::get<2>(token);
+            bool relative = std::get<3>(token);
 
             // Is there an indexer at the end?
             std::optional<byte_t> label_indexer;
@@ -322,14 +334,26 @@ namespace V502 {
 
                 word_t final = resolve.value();
 
-                if (label_indexer.has_value()) {
-                    if (label_indexer == 0)
-                        bytes[offset] = final;
-                    else
-                        bytes[offset] = final >> 8;
+                // Another gotcha from the 6502, if this is a relative resolve, we have to make sure we can reach it!
+                if (relative) {
+                    int16_t displace = final - offset;
+
+                    if (displace < -127 || displace > 128) {
+                        std::cerr << "Line " << line << ": Branch is too far away from label, due to a limitation of the 6502, branches can only go 127 bytes backward and 128 bytes forward!" << std::endl;
+                        throw std::runtime_error("Branch is too far away!");
+                    }
+
+                    bytes[offset] = (int8_t)(final - offset);
                 } else {
-                    bytes[offset] = final;
-                    bytes[offset + 1] = final >> 8;
+                    if (label_indexer.has_value()) {
+                        if (label_indexer == 0)
+                            bytes[offset] = final;
+                        else
+                            bytes[offset] = final >> 8;
+                    } else {
+                        bytes[offset] = final;
+                        bytes[offset + 1] = final >> 8;
+                    }
                 }
             } else {
                 std::cerr << "Line " << line << ": Unknown token '"<< target << "'! Did you forget to define a label?" << std::endl;

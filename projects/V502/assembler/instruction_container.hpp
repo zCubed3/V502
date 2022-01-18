@@ -23,6 +23,7 @@ namespace V502 {
         OptOpCode ind, x_ind, y_ind;
         OptOpCode now, only; // If only is set, we only use that one
         bool ind_word = false; // if ind_word = true, indirect calls use words instead of bytes
+        bool relative = false; // If relative = true, this instruction is a displacement (branch)
 
         OptOpCode get_code(uint32_t flags, bool word);
 

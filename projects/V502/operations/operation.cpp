@@ -118,13 +118,83 @@ namespace V502 {
         return true;
     }
 
-    DEFINE_OPERATION(BEQ) {
-        if (cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero) {
-            cpu->program_counter = cpu->next_word();
+    DEFINE_OPERATION(BPL) {
+        if (!(cpu->flags & MOS6502::Flags::Negative)) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
             return false;
         }
 
-        cpu->next_word(); // Dispose of the jump
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BMI) {
+        if (cpu->flags & MOS6502::Flags::Negative) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BVC) {
+        if (!(cpu->flags & MOS6502::Flags::Overflow)) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BVS) {
+        if (cpu->flags & MOS6502::Flags::Overflow) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BCC) {
+        if (!(cpu->flags & MOS6502::Flags::Carry)) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BCS) {
+        if (cpu->flags & MOS6502::Flags::Carry) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BNE) {
+        if (!(cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero)) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
+        return true;
+    }
+
+    DEFINE_OPERATION(BEQ) {
+        if (cpu->flags & MOS6502::Flags::Carry && cpu->flags & MOS6502::Flags::Zero) {
+            cpu->program_counter += (int8_t)cpu->next_byte();
+            return false;
+        }
+
+        cpu->next_byte(); // Dispose of the jump
         return true;
     }
 

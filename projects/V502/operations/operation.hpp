@@ -101,6 +101,16 @@ namespace V502 {
         JSR_ABS     = 0x20,
         RTS         = 0x60,
 
+        //
+        // Branching
+        //
+        BPL         = 0x10,
+        BMI         = 0x30,
+        BVC         = 0x50,
+        BVS         = 0x70,
+        BCC         = 0x90,
+        BCS         = 0xB0,
+        BNE         = 0xD0,
         BEQ         = 0xF0,
 
         //
