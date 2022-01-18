@@ -25,5 +25,5 @@ namespace V502 {
     }
 
     byte_t &Memory::at(word_t idx) { return (*this)[idx]; }
-    word_t Memory::size() { return length; }
+    uint32_t Memory::size() { return length; }
 }

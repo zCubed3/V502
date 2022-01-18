@@ -97,6 +97,10 @@ namespace V502 {
             throw std::runtime_error("System memory is a nullptr!");
 
         flags = 0;
+        accumulator = 0;
+        index_x = 0;
+        index_y = 0;
+        stack_ptr = 0xFF;
         program_counter = make_word(system_memory->at(0xFFFD), system_memory->at(0xFFFC));
     }
 

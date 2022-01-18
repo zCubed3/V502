@@ -56,7 +56,12 @@ namespace V502 {
             case OpCode::STA_ABS:
             case OpCode::STA_X_ABS:
             case OpCode::STA_Y_ABS: {
-                cpu->store_at(cpu->next_word() + (code == STA_ABS ? 0 : (code == STA_X_ABS ? cpu->index_x : cpu->index_y)), cpu->accumulator);
+                word_t where = cpu->next_word();
+
+                if (code != STA_ABS)
+                    where += (code == STA_X_ABS ? cpu->index_x : cpu->index_y);
+
+                cpu->store_at(where, cpu->accumulator);
                 break;
             }
         }
