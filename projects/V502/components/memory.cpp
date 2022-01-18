@@ -1,11 +1,14 @@
 #include "memory.hpp"
 
 #include <fstream>
+#include <cstring>
 
 namespace V502 {
     Memory::Memory(uint16_t desired_size) {
         buffer = new uint8_t[desired_size];
         length = desired_size;
+
+        memset(buffer, 0, length);
     }
 
     void Memory::copy_from(std::ifstream &file) {

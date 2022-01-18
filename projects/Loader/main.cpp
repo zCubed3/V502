@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
 
     // In a real 6502 program memory and system memory are in the same space
     // TODO: Fix 6502 memory and combine it!
-    V502::Memory *sys_memory = new V502::Memory(65535); // 64kb of memory
+    V502::Memory *sys_memory = new V502::Memory(65536); // 64kb of memory
     cpu->system_memory = sys_memory;
 
     std::ifstream bin_file(bin_path);

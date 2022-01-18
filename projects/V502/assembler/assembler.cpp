@@ -93,7 +93,7 @@ namespace V502 {
 
         word_t origin = ASM_BASE_ORIGIN; // Default program location
         word_t write = origin;
-        std::vector<uint8_t> bytes(0xFFFF); // 65535 bytes long, we generate giant rom images!
+        std::vector<uint8_t> bytes(65536); // 65536 bytes long, we generate giant rom images!
         memset(bytes.data(), 0, bytes.size());
 
         // Preprocessors and labels
