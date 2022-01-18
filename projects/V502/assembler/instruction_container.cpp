@@ -109,9 +109,10 @@ namespace V502 {
         //
         { "STA", STA_ZPG, STA_X_ZPG, {}, STA_ABS, STA_X_ABS, STA_Y_ABS, {}, {}, {}, {}, {}, false },
         { "LDA", LDA_ZPG, LDA_X_ZPG, {}, LDA_ABS, LDA_X_ABS, LDA_Y_ABS, {}, LDA_X_IND, LDA_Y_IND, LDA_NOW, {}, false },
-        { "ADC", {}, {}, {}, {}, {}, {}, {}, {}, {}, ADC_NOW, {}, false },
+        { "ADC", ADC_ZPG, ADC_X_ZPG, {}, ADC_ABS, ADC_X_ABS, ADC_Y_ABS, {}, ADC_X_IND, ADC_Y_IND, ADC_NOW, {}, false },
         { "SBC", {}, {}, {}, {}, {}, {}, {}, {}, {}, SBC_NOW, {}, false },
         { "CMP", {}, {}, {}, {}, {}, {}, {}, {}, {}, CMP_NOW, {}, false },
+        { "AND", AND_ZPG, AND_X_ZPG, {}, AND_ABS, AND_X_ABS, AND_Y_ABS, {}, AND_X_IND, AND_Y_IND, AND_NOW, {}, false },
 
         //
         // Flow

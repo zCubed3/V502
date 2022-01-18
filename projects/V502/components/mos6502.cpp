@@ -140,4 +140,8 @@ namespace V502 {
         word_t word = make_word(get_at_page(page, idx), get_at_page(page, idx + 1)) + post_fetch;
         return get_at(word);
     }
+
+    byte_t MOS6502::get_indirect_word(word_t idx) {
+        return get_at_page(get_at(idx), get_at(idx + 1));
+    }
 }

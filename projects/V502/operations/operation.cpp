@@ -9,7 +9,73 @@
 #define DEFINE_OPERATION(NAME) bool OP_##NAME(byte_t code, MOS6502* cpu)
 #define INVLID OP_BAD
 
+#define PICK_OFFSET_XY(X_OP) (code == X_OP ? cpu->index_x : cpu->index_y)
+#define PICK_OFFSET_X(N_OP) (code == N_OP ? 0 : cpu->index_y)
+#define PICK_OFFSET_TRI(N_OP, X_OP) (code == N_OP ? 0 : (code == X_OP ? cpu->index_x : cpu->index_y))
+
 namespace V502 {
+    DEFINE_OPERATION(ADC) {
+        switch (code) {
+            case ADC_NOW:
+                cpu->add_with_overflow(cpu->accumulator, cpu->next_byte());
+                break;
+
+            case ADC_ZPG:
+            case ADC_X_ZPG:
+                cpu->add_with_overflow(cpu->accumulator, cpu->get_at_page(0x00, cpu->next_byte() + PICK_OFFSET_X(ADC_ZPG)));
+                break;
+
+            case ADC_ABS:
+            case ADC_X_ABS:
+            case ADC_Y_ABS:
+                cpu->add_with_overflow(cpu->accumulator, cpu->get_at(cpu->next_word() + PICK_OFFSET_TRI(ADC_ABS, ADC_X_ABS)));
+                break;
+
+            case ADC_X_IND: {
+                cpu->add_with_overflow(cpu->accumulator, cpu->get_indirect(0x00, cpu->next_byte() + cpu->index_x));
+                break;
+            }
+
+            case ADC_Y_IND: {
+                cpu->add_with_overflow(cpu->accumulator, cpu->get_indirect(0x00, cpu->next_byte(), cpu->index_y));
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    DEFINE_OPERATION(AND) {
+        switch (code) {
+            case AND_NOW:
+                cpu->accumulator &= cpu->next_byte();
+                break;
+
+            case AND_ZPG:
+            case AND_X_ZPG:
+                cpu->accumulator &= cpu->get_at_page(0x00, cpu->next_byte() + PICK_OFFSET_X(ADC_ZPG));
+                break;
+
+            case AND_ABS:
+            case AND_X_ABS:
+            case AND_Y_ABS:
+                cpu->accumulator &= cpu->get_at(cpu->next_word() + PICK_OFFSET_TRI(AND_ABS, AND_X_ABS));
+                break;
+
+            case AND_X_IND: {
+                cpu->accumulator &= cpu->get_indirect(0x00, cpu->next_byte() + cpu->index_x);
+                break;
+            }
+
+            case AND_Y_IND: {
+                cpu->accumulator &= cpu->get_indirect(0x00, cpu->next_byte(), cpu->index_y);
+                break;
+            }
+        }
+
+        return true;
+    }
+
     DEFINE_OPERATION(JMP) {
         switch (code) {
             case OpCode::JMP_ABS:
@@ -26,16 +92,6 @@ namespace V502 {
         return false;
     }
 
-    DEFINE_OPERATION(ADC) {
-        switch (code) {
-            case OpCode::ADC_NOW:
-                cpu->add_with_overflow(cpu->accumulator, cpu->next_byte());
-                break;
-        }
-
-        return true;
-    }
-
     DEFINE_OPERATION(SBC) {
         switch (code) {
             case OpCode::SBC_NOW:
@@ -48,20 +104,15 @@ namespace V502 {
 
     DEFINE_OPERATION(STA) {
         switch (code) {
-            case OpCode::STA_X_ZPG:
             case OpCode::STA_ZPG:
+            case OpCode::STA_X_ZPG:
                 cpu->store_at_page(0, cpu->next_byte() + (code == STA_X_ZPG ? cpu->index_x : 0), cpu->accumulator);
                 break;
 
             case OpCode::STA_ABS:
             case OpCode::STA_X_ABS:
             case OpCode::STA_Y_ABS: {
-                word_t where = cpu->next_word();
-
-                if (code != STA_ABS)
-                    where += (code == STA_X_ABS ? cpu->index_x : cpu->index_y);
-
-                cpu->store_at(where, cpu->accumulator);
+                cpu->store_at(cpu->next_word() + PICK_OFFSET_TRI(STA_ABS, STA_X_ABS), cpu->accumulator);
                 break;
             }
         }
@@ -212,15 +263,13 @@ namespace V502 {
             case LDA_ABS:
             case LDA_X_ABS:
             case LDA_Y_ABS: {
-                byte_t offset = (code == LDA_ABS ? 0 : (code == LDA_X_ABS ? cpu->index_x : cpu->index_y));
-                cpu->accumulator = cpu->get_at(cpu->next_word() + offset);
+                cpu->accumulator = cpu->get_at(cpu->next_word() + PICK_OFFSET_TRI(LDA_ABS, LDA_X_ABS));
                 break;
             }
 
             case LDA_ZPG:
             case LDA_X_ZPG: {
-                byte_t offset = (code == LDA_ZPG ? 0 : cpu->index_x);
-                cpu->accumulator = cpu->get_at_page(0x00, cpu->next_byte() + offset);
+                cpu->accumulator = cpu->get_at_page(0x00, cpu->next_byte() + PICK_OFFSET_X(LDA_ZPG));
                 break;
             }
 
@@ -331,12 +380,12 @@ namespace V502 {
             /*      0       1       2       3       4       5       6       7       8       9       A       B       C       D       E       F   */
             /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 1 */ OP_BPL, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_NOP, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 2 */ OP_JSR, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 3 */ OP_BMI, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 2 */ OP_JSR, OP_AND, INVLID, INVLID, INVLID, OP_AND, INVLID, INVLID, OP_PLL, OP_AND, INVLID, INVLID, INVLID, OP_AND, INVLID, INVLID,
+            /* 3 */ OP_BMI, OP_AND, INVLID, INVLID, INVLID, OP_AND, INVLID, INVLID, INVLID, OP_AND, INVLID, INVLID, INVLID, OP_AND, INVLID, INVLID,
             /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 5 */ OP_BVC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 6 */ OP_RTS, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
-            /* 7 */ OP_BVS, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 6 */ OP_RTS, OP_ADC, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, OP_ADC, INVLID, INVLID,
+            /* 7 */ OP_BVS, OP_ADC, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID, INVLID, OP_ADC, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_DEC, INVLID, OP_TRA, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ OP_BCC, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, OP_TRA, OP_STA, OP_TXS, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* A */ OP_LDY, OP_LDA, OP_LDX, INVLID, OP_LDY, OP_LDA, OP_LDX, INVLID, OP_TAR, OP_LDA, OP_TAR, INVLID, OP_LDY, OP_LDA, OP_LDX, INVLID,

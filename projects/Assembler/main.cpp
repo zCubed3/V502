@@ -95,6 +95,16 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if (out_path.empty()) {
+        std::cerr << "Please provide a output file!" << std::endl;
+        return 1;
+    }
+
+    if (source_path.empty()) {
+        std::cerr << "Please provide a source file!" << std::endl;
+        return 1;
+    }
+
     V502::Assembler6502 *assembler = new V502::Assembler6502(source_path);
     std::vector<uint8_t> bytes = assembler->compile();
 

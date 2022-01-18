@@ -65,6 +65,7 @@ namespace V502 {
         void jump_page(byte_t page, byte_t idx);
         void load(RegisterIndex reg, byte_t val);
         byte_t get_indirect(byte_t page, byte_t idx, byte_t post_fetch = 0);
+        byte_t get_indirect_word(word_t idx);
 
         MOS6502();
         bool cycle();

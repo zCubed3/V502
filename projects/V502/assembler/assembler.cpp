@@ -134,7 +134,7 @@ namespace V502 {
         }
 
         if (!org_changed)
-            std::cout << "Explicit origin not provided, '.org', using default origin " << std::hex << ASM_BASE_ORIGIN << std::endl;
+            std::cout << "Explicit origin not provided, (use '.org' if you want a custom origin), using default origin " << std::hex << ASM_BASE_ORIGIN << std::endl;
 
         // We tell the system where the program begins
         bytes[0xFFFC] = origin;
@@ -246,7 +246,7 @@ namespace V502 {
             }
 
             OptOpCode opcode;
-            bool word = rhs.length() > 2;
+            bool word = rhs.length() > 2 && type == RhsType::HexNumber || type == RhsType::Address;
 
             for (auto container: InstructionContainer::containers) {
                 if (container.symbol == lhs) {
@@ -271,27 +271,26 @@ namespace V502 {
             bytes[write++] = opcode.value();
 
             if (rhs.length() > 0) {
-                std::vector<uint8_t> args;
-                for (int x = 0; x < rhs.length(); x += 2) {
-                    int radix = 10;
+                if (type == RhsType::HexNumber || type == RhsType::Address) {
+                    std::vector<uint8_t> args;
 
-                    switch (type) {
-                        case RhsType::HexNumber:
-                        case RhsType::Address:
-                            radix = 16;
-                            break;
+                    if (type)
+                        for (int x = 0; x < rhs.length(); x += 2) {
+                            std::string tok = rhs.substr(x, 2);
+                            args.emplace_back(std::stoi(tok, 0, 16));
+                        }
 
-                        case RhsType::BinaryNumber:
-                            radix = 2;
-                    }
-
-                    std::string tok = rhs.substr(x, 2);
-                    args.emplace_back(std::stoi(tok, 0, radix));
+                    std::reverse(args.begin(), args.end());
+                    for (auto arg: args)
+                        bytes[write++] = arg;
+                } else if (type == RhsType::DecNumber) {
+                    bytes[write++] = std::stoi(rhs, 0, 10);
+                } else if (type == RhsType::BinaryNumber) {
+                    bytes[write++] = std::stoi(rhs, 0, 2);
+                } else {
+                    std::cerr << "Line " << line << ": argument is unrecognized!" << std::endl;
+                    throw std::runtime_error("Argument type wasn't recognized!");
                 }
-
-                std::reverse(args.begin(), args.end());
-                for (auto arg : args)
-                    bytes[write++] = arg;
             }
         }
 

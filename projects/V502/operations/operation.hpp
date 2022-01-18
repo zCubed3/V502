@@ -81,6 +81,22 @@ namespace V502 {
         LDA_Y_IND   = 0xB1,
 
         ADC_NOW     = 0x69,
+        ADC_ZPG     = 0x65,
+        ADC_X_ZPG   = 0x75,
+        ADC_ABS     = 0x6D,
+        ADC_X_ABS   = 0x7D,
+        ADC_Y_ABS   = 0x79,
+        ADC_X_IND   = 0x61,
+        ADC_Y_IND   = 0x71,
+
+        AND_NOW     = 0x29,
+        AND_ZPG     = 0x25,
+        AND_X_ZPG   = 0x35,
+        AND_ABS     = 0x2D,
+        AND_X_ABS   = 0x3D,
+        AND_Y_ABS   = 0x39,
+        AND_X_IND   = 0x21,
+        AND_Y_IND   = 0x31,
 
         SBC_NOW     = 0xE9,
 
