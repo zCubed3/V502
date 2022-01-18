@@ -76,6 +76,9 @@ namespace V502 {
         JMP_ABS     = 0x4C,
         JMP_IND     = 0x6C,
 
+        JSR_ABS     = 0x20,
+        RTS         = 0x60,
+
         BEQ         = 0xF0,
 
         //

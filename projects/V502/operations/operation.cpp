@@ -115,9 +115,13 @@ namespace V502 {
                 break;
             }
 
-            //case LDA_Y_IND:
-
+            case LDA_Y_IND: {
+                cpu->accumulator = cpu->get_indirect(0x00, cpu->next_byte(), cpu->index_y);
+                break;
+            }
         }
+
+        return true;
     }
 
     DEFINE_OPERATION(LDX) {
@@ -135,7 +139,27 @@ namespace V502 {
 
     DEFINE_OPERATION(PLL) {
         (code == PLP ? cpu->flags : cpu->accumulator) = cpu->get_at_page(0x01, ++cpu->stack_ptr);
-        cpu->store_at_page(0x01, cpu->stack_ptr++, 0x00);
+        cpu->store_at_page(0x01, cpu->stack_ptr, 0x00);
+        return true;
+    }
+
+    DEFINE_OPERATION(JSR) {
+        cpu->store_at_page(0x01, cpu->stack_ptr--, (cpu->program_counter + 2));
+        cpu->store_at_page(0x01, cpu->stack_ptr--, (cpu->program_counter + 2) >> 8);
+        cpu->jump(cpu->next_word());
+
+        return false;
+    }
+
+    DEFINE_OPERATION(RTS) {
+        // For some reason the 6502 doesn't jump directly to the last spot, it's PC-1!
+        byte_t l = cpu->get_at_page(0x01, cpu->stack_ptr + 2);
+        byte_t h = cpu->get_at_page(0x01, cpu->stack_ptr + 1);
+
+        cpu->jump_page(h, l);
+
+        cpu->store_at_page(0x01, ++cpu->stack_ptr, 0x00);
+        cpu->store_at_page(0x01, ++cpu->stack_ptr, 0x00);
         return true;
     }
 
@@ -150,11 +174,11 @@ namespace V502 {
             /*      0       1       2       3       4       5       6       7       8       9       A       B       C       D       E       F   */
             /* 0 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 1 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_NOP, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 2 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* 2 */ OP_JSR, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 3 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 4 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PSH, INVLID, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 5 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* 6 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
+            /* 6 */ OP_RTS, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_PLL, OP_ADC, INVLID, INVLID, OP_JMP, INVLID, INVLID, INVLID,
             /* 7 */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* 8 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
             /* 9 */ INVLID, INVLID, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID, INVLID, OP_STA, INVLID, INVLID,
