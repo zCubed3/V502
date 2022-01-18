@@ -82,9 +82,11 @@ namespace V502 {
                 cpu->jump(cpu->next_word());
                 break;
 
-            case OpCode::JMP_IND: {
-                word_t where = cpu->next_word();
-                cpu->jump_page(cpu->system_memory->at(where + 1), cpu->system_memory->at(where));
+            case OpCode::JMP_IND: { // Indirect doesn't account for other pages, so we have to wrap around
+                byte_t h = cpu->next_byte();
+                byte_t l = cpu->next_byte();
+
+                cpu->jump_page(cpu->get_at_page(l, h + 1), cpu->get_at_page(l, h));
                 break;
             }
         }
