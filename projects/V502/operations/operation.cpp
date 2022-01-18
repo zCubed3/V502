@@ -36,6 +36,16 @@ namespace V502 {
         return true;
     }
 
+    DEFINE_OPERATION(SBC) {
+        switch (code) {
+            case OpCode::SBC_NOW:
+                cpu->add_with_overflow(cpu->accumulator, cpu->next_byte(), true);
+                break;
+        }
+
+        return true;
+    }
+
     DEFINE_OPERATION(STA) {
         switch (code) {
             case OpCode::STA_X_ZPG:
@@ -103,7 +113,7 @@ namespace V502 {
             cpu->program_counter = cpu->next_word();
             return false;
         }
-        
+
         cpu->next_word(); // Dispose of the jump
         return true;
     }
@@ -205,7 +215,7 @@ namespace V502 {
             /* B */ INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID, INVLID, OP_LDA, INVLID, INVLID,
             /* C */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_CMP, OP_DEC, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* D */ INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
-            /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
+            /* E */ OP_CPX, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, OP_INC, OP_SBC, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID,
             /* F */ OP_BEQ, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID, INVLID
     };
 }

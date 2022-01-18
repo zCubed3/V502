@@ -78,7 +78,7 @@ namespace V502 {
     }
 
     // Checks if there was an overflow and sets the flag accordingly
-    // Since ADC and SDC use this, we set carry equal to overflow
+    // Since ADC and SBC use this, we set carry equal to overflow
     void MOS6502::add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting) {
         word_t r = lhs + (subtracting ? -(int8_t)rhs : rhs);
 
@@ -88,7 +88,7 @@ namespace V502 {
             flags &= ~(Flags::Overflow | Flags::Carry);
         }
 
-        accumulator = lhs + rhs;
+        accumulator = lhs + (subtracting ? -(int8_t)rhs : rhs);
     }
 
     // Resets the program counter and flags
@@ -133,6 +133,7 @@ namespace V502 {
     }
 
     byte_t MOS6502::get_indirect(byte_t page, byte_t idx, byte_t post_fetch) {
-        return get_at_page(get_at_page(page, idx) + post_fetch, get_at_page(page, idx + 1) + post_fetch);
+        word_t word = make_word(get_at_page(page, idx), get_at_page(page, idx + 1)) + post_fetch;
+        return get_at(word);
     }
 }

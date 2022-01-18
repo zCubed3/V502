@@ -39,8 +39,6 @@ namespace V502 {
         if (assembly.empty())
             throw std::runtime_error("Can't compile nothing!");
 
-        // TODO: Better malformed code handling
-
         // First break up the lines
         std::vector<std::string> lines;
         std::vector<word_t> line_numbers;
@@ -173,8 +171,15 @@ namespace V502 {
                 // If it's indirect, ident is wrong
                 rhs = rhs.substr(1);
                 ident = rhs[0];
-                rhs.pop_back();
 
+                auto closing = rhs.find(')');
+                if (closing == std::string::npos) {
+                    std::cerr << "Line " << line << ": " << lhs << " is lacking a closing parenthesis!"
+                              << std::endl;
+                    throw std::runtime_error("Open parenthesis!");
+                }
+
+                rhs = rhs.erase(closing, 1);
                 calling |= CallingFlags::Indirect;
             }
 

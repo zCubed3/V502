@@ -107,6 +107,9 @@ namespace V502 {
         //
         { "STA", STA_ZPG, STA_X_ZPG, {}, STA_ABS, {}, {}, {}, {}, {}, {}, {}, false },
         { "LDA", LDA_ZPG, LDA_X_ZPG, {}, LDA_ABS, LDA_X_ABS, LDA_Y_ABS, {}, LDA_X_IND, LDA_Y_IND, LDA_NOW, {}, false },
+        { "ADC", {}, {}, {}, {}, {}, {}, {}, {}, {}, ADC_NOW, {}, false },
+        { "SBC", {}, {}, {}, {}, {}, {}, {}, {}, {}, SBC_NOW, {}, false },
+        { "CMP", {}, {}, {}, {}, {}, {}, {}, {}, {}, CMP_NOW, {}, false },
 
         //
         // Flow
@@ -115,10 +118,14 @@ namespace V502 {
         { "JSR", {}, {}, {}, JSR_ABS, {}, {}, {}, {}, {}, {}, {}, true },
         { "RTS", {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, RTS, false },
 
-
-        { "CMP", {}, {}, {}, {}, {}, {}, {}, {}, {}, CMP_NOW, {}, false },
+        //
+        // Branching
+        //
         { "BEQ", {}, {}, {}, BEQ, {}, {}, {}, {}, {}, {}, {}, false },
-        { "ADC", {}, {}, {}, {}, {}, {}, {}, {}, {}, ADC_NOW, {}, false },
+
+        //
+        // Misc
+        //
         { "NOP", {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, NOP, false },
     };
 }

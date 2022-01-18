@@ -70,6 +70,8 @@ namespace V502 {
 
         ADC_NOW     = 0x69,
 
+        SBC_NOW     = 0xE9,
+
         CMP_NOW     = 0xC9,
 
         //
