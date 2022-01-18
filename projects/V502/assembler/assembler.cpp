@@ -246,7 +246,7 @@ namespace V502 {
             }
 
             OptOpCode opcode;
-            bool word = rhs.length() > 2 && type == RhsType::HexNumber || type == RhsType::Address;
+            bool word = rhs.length() > 2 && (type == RhsType::HexNumber || type == RhsType::Address);
 
             for (auto container: InstructionContainer::containers) {
                 if (container.symbol == lhs) {
