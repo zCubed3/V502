@@ -8,17 +8,32 @@ test:
   txa
   dex
   tax
-  ldx #$FF
+
+  ldx $00 ; zpg
+  ldx $00,Y ; zpg + y
+  ldx $0000 ; abs
+  ldx $0000,Y ; abs + y
+
+  tsx
+  txs
+
+  ldx #$0F
 
   ; Y Register
   iny
   tya
   dey
   tay
-  ldy #$FF
+
+  ldy $00 ; zpg
+  ldy $00,X ; zpg + x
+  ldy $0000 ; abs
+  ldy $0000,X ; abs + x
+
+  ldy #$F0
 
   ; Accumulator
-  lda #$09
+  lda #$09 ; now
   adc #$01
   sta $00
   sbc #$05
@@ -29,8 +44,8 @@ test:
   lda $0000 ; abs
   lda $0000,X ; abs + x
   lda $0000,Y ; abs + y
-  lda ($01,X) ; zpg + x, indirect
-  lda ($01),Y ; zpg, indirect + y
+  lda ($00,X) ; zpg + x, indirect
+  lda ($00),Y ; zpg, indirect + y
 
   ; Flow
   jsr sub_stack
