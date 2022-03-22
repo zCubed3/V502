@@ -71,6 +71,8 @@ int main(int argc, char** argv) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    bool vsync = true;
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -82,6 +84,9 @@ int main(int argc, char** argv) {
         ImGui::NewFrame();
 
         ImGui::Begin("CPU");
+
+        if (ImGui::Checkbox("VSync? (Limits CPU max speed!)", &vsync))
+            glfwSwapInterval(vsync ? 1 : 0);
 
         bool manual_cycle = ImGui::Button("Step");
 
@@ -246,7 +251,7 @@ int main(int argc, char** argv) {
         ImGui::Text("G = 0x5100 -> 0x51FF");
         ImGui::Text("B = 0x5200 -> 0x52FF");
 
-        ImGui::Image((void*)image_buffer, ImVec2(128, 128));
+        ImGui::Image(reinterpret_cast<void*>(image_buffer), ImVec2(128, 128));
 
         ImGui::End();
 

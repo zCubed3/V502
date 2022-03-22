@@ -16,4 +16,7 @@
 ### Third Party Software Used
 #### [Credits](CREDITS)
 
-#### [imgui](https://github.com/ocornut/imgui/) - MIT License [here](https://github.com/ocornut/imgui/blob/master/LICENSE.txt)
+#### For GUI
+* [imgui](https://github.com/ocornut/imgui/) - MIT License [here](https://github.com/ocornut/imgui/blob/master/LICENSE.txt)
+* [glew](https://github.com/nigels-com/glew) - BSD License [here](http://glew.sourceforge.net/glew.txt)
+* [GLFW](https://github.com/glfw/glfw) - zlib License [here](https://www.glfw.org/license)

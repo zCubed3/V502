@@ -10,10 +10,9 @@ namespace V502 {
 
     // The 6502 is represented here by its name because we might add the W65C02 some day!
     // While that CPU isn't that much different it would still be useful to have!
+    // TODO: W65C02S has more instructions than the 6502, we need a good way to make a 6502-like CPU abstract
     class MOS6502 {
     public:
-        // TODO: Timing table and virtual CPU clock!
-
         //
         // Registers
         //

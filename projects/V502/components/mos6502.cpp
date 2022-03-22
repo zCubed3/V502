@@ -81,6 +81,7 @@ namespace V502 {
     // Since ADC and SBC use this, we set carry equal to overflow
     void MOS6502::add_with_overflow(byte_t lhs, byte_t rhs, bool subtracting) {
         word_t r = lhs + (subtracting ? -(int8_t)rhs : rhs);
+        r += flags & Flags::Carry ? 1 : 0; // Adds one to r if we've got a carry bit
 
         if (r < 0x00 || r > 0xFF)
             flags |= (Flags::Overflow | Flags::Carry);
