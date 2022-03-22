@@ -13,8 +13,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 
-#include <components/memory.hpp>
-#include <components/mos6502.hpp>
+#include <V502/6502_vm.h>
 
 #define PAD_HEX_LO std::setfill('0') << std::setw(2)
 #define PAD_HEX std::setfill('0') << std::setw(4)
@@ -34,10 +33,10 @@ int main(int argc, char** argv) {
         throw std::runtime_error("GLEW failed to initialize!");
     }
 
-    V502::MOS6502 *cpu = new V502::MOS6502();
+    v502_6502vm_createinfo_t createinfo {};
+    createinfo.hunk_size = 0xFFFF + 1;
 
-    V502::Memory *sys_memory = new V502::Memory(65536); // 64kb of memory
-    cpu->system_memory = sys_memory;
+    v502_6502vm_t *cpu = v502_create_vm(&createinfo);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -105,21 +104,22 @@ int main(int argc, char** argv) {
                 cycle_wait = 0;
 
                 try {
-                    cpu->cycle();
+                    v502_cycle_vm(cpu);
                 } catch (std::exception& err) {
                     call_stream << "Encountered exception while trying to cycle the CPU (check console for specifics!):\n" << err.what() << "\n" << std::endl;
                 }
 
+                // TODO: Restore image functionality
                 // We refresh the image here instead because of performance
-                uint8_t pixels[256 * 3];
-                for (int p = 0; p < 256; p++) {
-                    auto o = p * 3;
-                    pixels[o] = cpu->get_at_page(0x50, p);
-                    pixels[o + 1] = cpu->get_at_page(0x51, p);
-                    pixels[o + 2] = cpu->get_at_page(0x52, p);
-                }
+                //uint8_t pixels[256 * 3];
+                //for (int p = 0; p < 256; p++) {
+                //    auto o = p * 3;
+                //    pixels[o] = cpu->get_at_page(0x50, p);
+                //    pixels[o + 1] = cpu->get_at_page(0x51, p);
+                //    pixels[o + 2] = cpu->get_at_page(0x52, p);
+                //}
 
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+                //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
             }
         } else
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +cpu->get_at_page(page_number, idx);
+                int value = +cpu->hunk[v502_make_word(page_number, idx)];
                 memory_stream << PAD_HEX_LO << value << " ";
             }
 
@@ -188,11 +188,11 @@ int main(int argc, char** argv) {
         ImGui::InputTextWithHint("Bin File", "ex: test.bin", path_buf, 256);
 
         if (ImGui::Button("Load Bin")) {
-            std::ifstream bin_file(path_buf);
+            std::ifstream bin_file(path_buf, std::ifstream::binary);
 
             if (bin_file.is_open()) {
-                sys_memory->copy_from(bin_file);
-                cpu->reset();
+                bin_file.read(reinterpret_cast<char*>(cpu->hunk), cpu->hunk_length);
+                v502_reset_vm(cpu);
             } else {
                 call_stream << "Failed to load binary at '" << path_buf << "', does it exist? Do you have access to it?\n" << std::endl;
             }
@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +sys_memory->at(idx);
+                int value = +cpu->hunk[idx];
                 memory_stream << PAD_HEX_LO << value << " ";
             }
             memory_stream << "\n";

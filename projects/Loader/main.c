@@ -7,7 +7,7 @@
 int main() {
     v502_6502vm_createinfo_t createinfo;
     createinfo.hunk_size = 0xFFFF + 1;
-    createinfo.feature_set = V502_FEATURESET_MOS6502;
+    createinfo.feature_set = v502_FEATURESET_MOS6502;
 
     v502_6502vm_t* vm = v502_create_vm(&createinfo);
 

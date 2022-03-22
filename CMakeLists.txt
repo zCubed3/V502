@@ -15,4 +15,4 @@ set(PROJECTS_DIR "${CMAKE_SOURCE_DIR}/projects")
 add_subdirectory("${PROJECTS_DIR}/V502") # Core
 add_subdirectory("${PROJECTS_DIR}/Loader") # Loader program
 #add_subdirectory("${PROJECTS_DIR}/Assembler") # Assembler program
-#add_subdirectory("${PROJECTS_DIR}/GUI") # GUI program
+add_subdirectory("${PROJECTS_DIR}/GUI") # GUI program

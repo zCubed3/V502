@@ -40,7 +40,7 @@ int v502_cycle_vm(v502_6502vm_t* vm) {
     assert(vm != NULL);
 
     v502_byte_t next_op = vm->hunk[vm->program_counter];
-    V502_OP_STATE_E state = vm->opfuncs[next_op](vm, next_op);
+    v502_OP_STATE_E state = vm->opfuncs[next_op](vm, next_op);
 
     if (state <= 0)
         return 0;
@@ -49,4 +49,29 @@ int v502_cycle_vm(v502_6502vm_t* vm) {
         vm->program_counter += 1;
 
     return 1;
+}
+
+void v502_safe_add_vm(v502_6502vm_t *vm, v502_byte_t val) {
+    v502_word_t r = vm->accumulator + val;
+    r += vm->flags & v502_STATE_FLAG_CARRY ? 1 : 0; // Adds one to r if we've got a carry bit
+
+    if (r < 0x00 || r > 0xFF)
+        vm->flags |= (v502_STATE_FLAG_OVERFLOW | v502_STATE_FLAG_CARRY);
+    else
+        vm->flags &= ~(v502_STATE_FLAG_OVERFLOW | v502_STATE_FLAG_CARRY);
+
+    vm->accumulator += val;
+}
+
+//TODO: I haven't tested if this actually lines up with SDC behavior on an actual 6502
+void v502_safe_sub_vm(v502_6502vm_t *vm, v502_byte_t val) {
+    v502_word_t r = vm->accumulator + -(int8_t)val;
+    r += vm->flags & v502_STATE_FLAG_CARRY ? 1 : 0; // Adds one to r if we've got a carry bit
+
+    if (r < 0x00 || r > 0xFF)
+        vm->flags |= (v502_STATE_FLAG_OVERFLOW | v502_STATE_FLAG_CARRY);
+    else
+        vm->flags &= ~(v502_STATE_FLAG_OVERFLOW | v502_STATE_FLAG_CARRY);
+
+    vm->accumulator += -(int8_t)val;
 }
