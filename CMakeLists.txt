@@ -1,17 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
 project(V502)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_CXX_COMPILER_ID}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}/")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_C_COMPILER_ID}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}/")
 set(CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECTS_DIR "${CMAKE_SOURCE_DIR}/projects")
 
 add_subdirectory("${PROJECTS_DIR}/V502") # Core
 add_subdirectory("${PROJECTS_DIR}/Loader") # Loader program
-add_subdirectory("${PROJECTS_DIR}/Assembler") # Assembler program
-add_subdirectory("${PROJECTS_DIR}/GUI") # GUI program
+#add_subdirectory("${PROJECTS_DIR}/Assembler") # Assembler program
+#add_subdirectory("${PROJECTS_DIR}/GUI") # GUI program

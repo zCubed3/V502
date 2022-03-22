@@ -1,5 +1,5 @@
 set(V502Loader_SOURCES
-    "main.cpp"
+    "main.c"
 )
 
 add_executable(V502Loader ${V502Loader_SOURCES})
