@@ -9,3 +9,5 @@ set(V502Lib_SOURCES
 
 add_library(V502Lib STATIC ${V502Lib_SOURCES})
 target_include_directories(V502Lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_target_properties(V502Lib PROPERTIES OUTPUT_NAME v502)

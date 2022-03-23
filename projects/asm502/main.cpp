@@ -1,5 +1,5 @@
 #define V502_INCLUDE_ASSEMBLER
-#include <V502/v502.h>
+#include <v502/v502.h>
 
 #include <iostream>
 #include <fstream>

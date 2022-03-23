@@ -1,4 +1,4 @@
-#include <V502/v502.h>
+#include <v502/v502.h>
 
 #include <iostream>
 #include <fstream>

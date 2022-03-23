@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(PROJECTS_DIR "${CMAKE_SOURCE_DIR}/projects")
 
-add_subdirectory("${PROJECTS_DIR}/V502") # Core
-add_subdirectory("${PROJECTS_DIR}/Loader") # Loader program
-add_subdirectory("${PROJECTS_DIR}/Assembler") # Assembler program
-add_subdirectory("${PROJECTS_DIR}/GUI") # GUI program
+add_subdirectory("${PROJECTS_DIR}/v502") # Core
+add_subdirectory("${PROJECTS_DIR}/emu502") # Loader program
+add_subdirectory("${PROJECTS_DIR}/asm502") # Assembler program
+add_subdirectory("${PROJECTS_DIR}/emu502-gui") # GUI program

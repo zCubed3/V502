@@ -13,7 +13,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 
-#include <V502/v502.h>
+#include <v502/v502.h>
 
 #define PAD_HEX_LO std::setfill('0') << std::setw(2)
 #define PAD_HEX std::setfill('0') << std::setw(4)

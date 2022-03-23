@@ -2,3 +2,7 @@
 	path = projects/GUI/dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
+[submodule "projects/emu502-gui/dependencies/imgui"]
+	path = projects/emu502-gui/dependencies/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
