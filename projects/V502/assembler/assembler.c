@@ -144,8 +144,10 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
         else
             nl_count = 0;
 
-        if (nl_count > 1)
+        if (nl_count > 1) {
             source_dupe[c] = '\r';
+            nl_count = 0;
+        }
     }
 
     source_dupe[last_line_idx] = '\0';
@@ -176,10 +178,14 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
         if (token[0] == ';' || token[0] == '\0')
             continue;
 
-        if (token[0] == '\r') {
+        while (token[0] == '\r') {
             line_no += 1;
             token = token + 1;
         }
+
+        // Trim extra '\r'
+        while (token[0] == '\r')
+            token = token + 1;
 
         // If this line starts with a period, it's assembler data
         if (token[0] == '.') {
@@ -248,6 +254,10 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
         }
 
         if (label_found)
+            continue;
+
+        // Post sanitization check
+        if (strlen(token) == 0)
             continue;
 
         token = token + offset;
@@ -384,7 +394,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                             for (uint32_t b = c; b < line_len; b++) {
                                 if (child->line[b] == '[') {
                                     open_brackets = 1;
-                                    indexer = strtol(child->line + b, NULL, 10);
+                                    indexer = child->line[b + 1] - '0';
                                 }
 
                                 if (child->line[b] == ']') {
@@ -392,6 +402,8 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                                     has_indexer = 1;
                                 }
                             }
+
+                            assert(!open_brackets);
 
                             LABEL_REFERENCE_TYPE_E ref_type = LABEL_REFERENCE_TYPE_WHOLE;
                             if (has_indexer) {
@@ -447,7 +459,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                 binary_hunk[ref->where] = (char)label->loc;
 
             if (ref->ref_type == LABEL_REFERENCE_TYPE_WHOLE || ref->ref_type == LABEL_REFERENCE_TYPE_RIGHT)
-                binary_hunk[ref->where + 1] = (char)(label->loc >> 8);
+                binary_hunk[ref->where + (ref->ref_type == LABEL_REFERENCE_TYPE_WHOLE ? 1 : 0)] = (char)(label->loc >> 8);
         }
     }
 
