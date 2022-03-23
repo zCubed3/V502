@@ -32,11 +32,58 @@ void push_source_line_stack(source_line_stack_t* stack, source_line_t* line) {
         stack->end = stack->end->next = line;
 }
 
+typedef enum LABEL_REFERENCE_TYPE {
+    LABEL_REFERENCE_TYPE_WHOLE,
+    LABEL_REFERENCE_TYPE_LEFT,
+    LABEL_REFERENCE_TYPE_RIGHT
+} LABEL_REFERENCE_TYPE_E;
+
+typedef struct label_referencer {
+    uint32_t where;
+    LABEL_REFERENCE_TYPE_E ref_type;
+    struct label_referencer* next;
+} label_referencer_t;
+
 typedef struct label_placeholder {
     char* symbol;
+    uint8_t resolved;
     uint32_t loc;
+    uint32_t line_def;
+
+    label_referencer_t* top_ref;
     struct label_placeholder* next;
 } label_placeholder_t;
+
+void push_label_placeholder(label_placeholder_t* stack, label_placeholder_t* label) {
+    assert(stack != NULL);
+
+    label_placeholder_t* tail = NULL;
+    for (label_placeholder_t* child = stack; child != NULL; child = child->next) {
+        tail = child;
+    }
+
+    assert(tail != NULL);
+
+    tail->next = label;
+}
+
+void push_label_reference(label_placeholder_t* label, uint32_t where, LABEL_REFERENCE_TYPE_E type) {
+    assert(label != NULL);
+
+    label_referencer_t* tail = NULL;
+    for (label_referencer_t* child = label->top_ref; child != NULL; child = child->next) {
+        tail = child;
+    }
+
+    label_referencer_t* ref = calloc(1, sizeof(label_referencer_t));
+    ref->ref_type = type;
+    ref->where = where;
+
+    if (tail == NULL)
+        label->top_ref = ref;
+    else
+        tail->next = ref;
+}
 
 v502_assembler_instance_t* v502_create_assembler() {
     v502_assembler_instance_t *inst = calloc(1, sizeof(v502_assembler_instance_t));
@@ -81,6 +128,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
     //printf("source:\n%s\n", source->source);
 
     source_line_stack_t* line_stack = calloc(1, sizeof(source_line_stack_t));
+    label_placeholder_t* label_stack = NULL;
 
     // Seek backward and set the last \n to nothing to prevent errors caused by LF endings
     uint32_t last_line_idx = source_len - 1;
@@ -172,10 +220,35 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                 break;
         }
 
-        // Check if this contains a colon at the end of a name, if so, we've found a label!
-        for (uint32_t c = 0; c < tok_len; c++) {
-
+        // If this line starts with a colon, discard it since it's an empty label
+        if (token[0] == ':') {
+            printf("Warning: On line %i there is a stray colon, did you mean to define a label?\n  src: '%s'\n", line_no, token);
+            continue;
         }
+
+        // Check if this contains a colon at the end of a name, if so, we've found a label!
+        uint32_t label_found = 0;
+        for (uint32_t c = 0; c < tok_len; c++) {
+            if (token[c] == ':') {
+                char* label = calloc(c + 1, 1);
+                memcpy(label, token, c);
+
+                label_placeholder_t* placeholder = calloc(1, sizeof(label_placeholder_t));
+                placeholder->symbol = label;
+                placeholder->line_def = line_no;
+
+                if (label_stack != NULL)
+                    push_label_placeholder(label_stack, placeholder);
+                else
+                    label_stack = placeholder;
+
+                label_found = 1;
+                break;
+            }
+        }
+
+        if (label_found)
+            continue;
 
         token = token + offset;
 
@@ -204,6 +277,17 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
     // Parse the assembly lines
     uint32_t write_origin = origin;
     for (source_line_t* child = line_stack->top; child != NULL; child = child->next) {
+        // If we have unresolved labels behind this line we must resolve them
+        for (label_placeholder_t* child_label = label_stack; child_label != NULL; child_label = child_label->next) {
+            if (child_label->line_def < child->no && !child_label->resolved) {
+                child_label->loc = write_origin;
+                child_label->resolved = 1;
+
+                // TODO: If verbose
+                printf("Resolved label '%s' at 0x%x\n", child_label->symbol, child_label->loc);
+            }
+        }
+
         uint32_t line_len = strlen(child->line);
 
         // The opcode is the first 3 characters
@@ -279,6 +363,60 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
             }
         }
 
+        // If we're missing an arg, check if we're referencing a label we found in preprocessing
+        if (!has_arg) {
+            for (uint32_t c = 4; c < line_len; c++) {
+                if (child->line[c] != ' ') {
+                    for (label_placeholder_t *child_label = label_stack; child_label != NULL; child_label = child_label->next) {
+                        // We need to single out the label name
+                        char* label_name = calloc(strlen(child_label->symbol), 1);
+
+                        for (uint32_t b = c; b < line_len; b++) {
+                            if (child->line[b] == '[')
+                                break;
+                            else
+                                label_name[b - c] = child->line[b];
+                        }
+
+                        if (strcmp(label_name, child_label->symbol) == 0) {
+                            // We first need to check if there are indexer brackets
+                            int has_indexer = 0, open_brackets = 0, indexer = 0;
+                            for (uint32_t b = c; b < line_len; b++) {
+                                if (child->line[b] == '[') {
+                                    open_brackets = 1;
+                                    indexer = strtol(child->line + b, NULL, 10);
+                                }
+
+                                if (child->line[b] == ']') {
+                                    open_brackets = 0;
+                                    has_indexer = 1;
+                                }
+                            }
+
+                            LABEL_REFERENCE_TYPE_E ref_type = LABEL_REFERENCE_TYPE_WHOLE;
+                            if (has_indexer) {
+                                if (indexer == 0)
+                                    ref_type = LABEL_REFERENCE_TYPE_LEFT;
+                                else if (indexer == 1)
+                                    ref_type = LABEL_REFERENCE_TYPE_RIGHT;
+                                else
+                                    assert(ref_type); // TODO: Error stack
+                            }
+
+                            push_label_reference(child_label, write_origin + 1, ref_type);
+
+                            has_arg = 1;
+                            wide_arg = !has_indexer;
+                            break;
+                        }
+
+                        free(label_name);
+                    }
+                    break;
+                }
+            }
+        }
+
         // We then pass this into v502_symbol_get_opcode
         v502_word_t opcode = v502_symbol_get_opcode(sym, call_flags, wide_arg);
 
@@ -293,6 +431,26 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                 binary_hunk[write_origin++] = (char) (arg >> 8);
         }
     }
+
+    // After compiling we have to go through and populate the label references
+    for (label_placeholder_t *label = label_stack; label != NULL; label = label->next) {
+        if (!label->resolved) {
+            printf("Error: Label '%s' was unresolved after assembling!\n", label->symbol);
+            printf("  '%s' was defined on line %i\n", label->symbol, label->line_def);
+
+            // TODO: Error stack
+            assert(label->resolved);
+        }
+
+        for (label_referencer_t *ref = label->top_ref; ref != NULL; ref = ref->next) {
+            if (ref->ref_type == LABEL_REFERENCE_TYPE_WHOLE || ref->ref_type == LABEL_REFERENCE_TYPE_LEFT)
+                binary_hunk[ref->where] = (char)label->loc;
+
+            if (ref->ref_type == LABEL_REFERENCE_TYPE_WHOLE || ref->ref_type == LABEL_REFERENCE_TYPE_RIGHT)
+                binary_hunk[ref->where + 1] = (char)(label->loc >> 8);
+        }
+    }
+
 
     v502_binary_file_t* bin_file = calloc(1, sizeof(v502_binary_file_t));
     bin_file->bytes = binary_hunk;
