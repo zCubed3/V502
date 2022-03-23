@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
+
+#include "../vm/6502_vm.h"
 
 typedef struct source_line {
     char* line;
@@ -28,6 +31,12 @@ void push_source_line_stack(source_line_stack_t* stack, source_line_t* line) {
     else
         stack->end = stack->end->next = line;
 }
+
+typedef struct label_placeholder {
+    char* symbol;
+    uint32_t loc;
+    struct label_placeholder* next;
+} label_placeholder_t;
 
 v502_assembler_instance_t* v502_create_assembler() {
     v502_assembler_instance_t *inst = calloc(1, sizeof(v502_assembler_instance_t));
@@ -99,7 +108,6 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
 
     // Then break the file up by lines
     uint32_t line_no = 0;
-
     uint32_t tok_inited = 0;
 
     while (1) {
@@ -150,12 +158,26 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
         }
 
         // We also eliminate trailing characters
-        for (uint32_t c = tok_len - 1; c > 0; c++) {
+        for (uint32_t c = tok_len - 1; c > 0; c--) {
             if (token[c] == '\n' || token[c] == '\r' || token[c] == ' ' || token[c] == '\0')
                 token[c] = '\0';
             else
                 break;
         }
+
+        // We also trim the start to remove tabs and spaces, and extra \r's from CRLF files
+        uint32_t offset = 0;
+        for (; offset < tok_len; offset++) {
+            if (!(token[offset] == ' ' || token[offset] == '\t'))
+                break;
+        }
+
+        // Check if this contains a colon at the end of a name, if so, we've found a label!
+        for (uint32_t c = 0; c < tok_len; c++) {
+
+        }
+
+        token = token + offset;
 
         char* line_dupe = malloc(strlen(token));
         strcpy(line_dupe, token);
@@ -172,16 +194,109 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
     else
         printf("Origin wasn't provided, using default of 0x4000\n");
 
-    // Actually assemble the lines
-    for (source_line_t* child = line_stack->top; child != NULL; child = child->next) {
-        char* line_dupe = malloc(strlen(child->line));
-        strcpy(line_dupe, child->line);
+    // Begin assembling
+    char* binary_hunk = calloc(0xFFFF + 1, 1);
 
-        printf("%i: %s\n", child->no, child->line);
+    // Write the origin
+    binary_hunk[v502_MAGIC_VECTOR_INDEX] = (char)origin;
+    binary_hunk[v502_MAGIC_VECTOR_INDEX + 1] = (char)(origin >> 8);
+
+    // Parse the assembly lines
+    uint32_t write_origin = origin;
+    for (source_line_t* child = line_stack->top; child != NULL; child = child->next) {
+        uint32_t line_len = strlen(child->line);
+
+        // The opcode is the first 3 characters
+        char op[4];
+        memcpy(op, child->line, 3);
+
+        for (int c = 0; c < 3; c++)
+            op[c] = (char) toupper(op[c]);
+
+        // Locate the symbol
+        v502_assembler_symbol_t *sym = NULL;
+        for (v502_assembler_symbol_t *child = assembler->symbol_stack; child != NULL; child = child->next) {
+            if (strcmp(op, child->name) == 0) {
+                sym = child;
+                break;
+            }
+        }
+
+        assert(sym != NULL);
+
+        // Then determine the type of call
+        v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E call_flags = 0;
+
+        // If we encounter parenthesis, this is indirect!
+        // We do need to close the parenthesis though!
+        // TODO: Error stack!
+        int open_parenthesis = 0;
+        for (uint32_t c = 0; c < line_len; c++) {
+            if (child->line[c] == '(')
+                open_parenthesis = 1;
+
+            if (child->line[c] == ')' && open_parenthesis) {
+                open_parenthesis = 0;
+                call_flags |= v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDIRECT;
+            }
+        }
+
+        // If we encounter a number marker, we are doing a NOW call
+        // or if we encounter a stray address without indirect!
+        int wide_arg = 0, has_arg = 0;
+        v502_word_t arg = 0;
+        for (uint32_t c = 0; c < line_len; c++) {
+            if (child->line[c] == '#') {
+                char ident = child->line[c + 1];
+                char *arg_text = child->line + c + 2;
+
+                if (ident == '$')
+                    arg = strtol(arg_text, NULL, 16);
+                else if (ident == '%')
+                    arg = strtol(arg_text, NULL, 2);
+                else
+                    arg = strtol(arg_text, NULL, 10);
+
+                has_arg = 1;
+                break;
+            }
+
+            if (!(call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDIRECT)) {
+                if (child->line[c] == '$') {
+                    // Wide arg here is determined by how long the resulting string is!
+                    char *arg_text = child->line + c + 1;
+                    uint32_t len = strlen(arg_text);
+
+                    arg = strtol(arg_text, NULL, 16);
+                    wide_arg = len > 2;
+
+                    if (!wide_arg)
+                        call_flags |= v502_ASSEMBLER_SYMBOL_CALL_FLAG_ZPG;
+
+                    has_arg = 1;
+                    break;
+                }
+            }
+        }
+
+        // We then pass this into v502_symbol_get_opcode
+        v502_word_t opcode = v502_symbol_get_opcode(sym, call_flags, wide_arg);
+
+        // TODO: Error stack!
+        assert(opcode != v502_ASSEMBLER_MAGIC_MISSING_CODE);
+
+        binary_hunk[write_origin++] = (char) opcode;
+
+        if (has_arg) {
+            binary_hunk[write_origin++] = (char) arg;
+            if (wide_arg)
+                binary_hunk[write_origin++] = (char) (arg >> 8);
+        }
     }
 
     v502_binary_file_t* bin_file = calloc(1, sizeof(v502_binary_file_t));
-    bin_file->bytes = malloc(128); // TODO
+    bin_file->bytes = binary_hunk;
+    bin_file->length = 0xFFFF + 1;
 
     return bin_file;
 }

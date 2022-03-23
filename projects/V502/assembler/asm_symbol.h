@@ -34,7 +34,7 @@ typedef struct v502_assembler_symbol {
 } v502_assembler_symbol_t;
 
 void v502_symbol_setup_stack(v502_assembler_symbol_t** top);
-v502_byte_t v502_symbol_get_opcode(v502_assembler_symbol_t* sym, v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E call_flags);
+v502_word_t v502_symbol_get_opcode(v502_assembler_symbol_t* sym, v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E call_flags, int wide_arg);
 
 #ifdef __cplusplus
 }

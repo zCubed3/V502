@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-const v502_word_t v502_ASSEMBLER_MAGIC_MISSING_CODE = 0xFFFF;
+extern const v502_word_t v502_ASSEMBLER_MAGIC_MISSING_CODE = 0xFFFF;
 
 #define OP(NAME) v502_MOS_OP_##NAME
 
@@ -138,5 +138,54 @@ void v502_symbol_setup_stack(v502_assembler_symbol_t** top) {
         *tail_sym = sym;
 
         v502_symbol_push_stack(*top, tail_sym);
+    }
+}
+
+v502_word_t v502_symbol_get_opcode(v502_assembler_symbol_t* sym, v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E call_flags, int wide_arg) {
+    assert(sym != NULL);
+
+    if (sym->only != MISSING)
+        return sym->only;
+
+    if (wide_arg) {
+        if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDIRECT && sym->flags & v502_ASSEMBLER_SYMBOL_FLAG_INDIRECT_WORD) {
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_X)
+                return sym->x_ind;
+
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_Y)
+                return sym->y_ind;
+
+            return sym->ind;
+        } else {
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_X)
+                return sym->x_abs;
+
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_Y)
+                return sym->y_abs;
+
+            return sym->abs;
+        }
+    } else {
+        if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDIRECT) {
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_X)
+                return sym->x_ind;
+
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_Y)
+                return sym->y_ind;
+
+            return sym->ind;
+        } else {
+            if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_ZPG) {
+                if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_X)
+                    return sym->x_zpg;
+
+                if (call_flags & v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDEX_Y)
+                    return sym->y_zpg;
+
+                return sym->zpg;
+            }
+
+            return sym->now;
+        }
     }
 }
