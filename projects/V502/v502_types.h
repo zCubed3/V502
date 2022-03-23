@@ -1,5 +1,5 @@
-#ifndef V502_6502_TYPES_H
-#define V502_6502_TYPES_H
+#ifndef V502_V502_TYPES_H
+#define V502_V502_TYPES_H
 
 #include <stdint.h>
 

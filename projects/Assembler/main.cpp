@@ -1,12 +1,11 @@
-#include <V502/components/mos6502.hpp>
-#include <V502/components/memory.hpp>
+#define V502_INCLUDE_ASSEMBLER
+#include <V502/v502.h>
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-
-#include <V502/assembler/assembler.hpp>
+#include <vector>
 
 void print_help() {
     std::cout << "Example: Asm502 -s test.s -o test.bin\n";
@@ -105,11 +104,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    V502::Assembler6502 *assembler = new V502::Assembler6502(source_path);
-    std::vector<uint8_t> bytes = assembler->compile();
+    v502_assembler_instance_t *assembler = v502_create_assembler();
+
+    v502_source_file_t *source = v502_load_source(source_path.c_str());
+    v502_binary_file_t *binary = v502_assemble_source(assembler, source);
 
     std::ofstream out(out_path);
-    out.write(reinterpret_cast<char*>(bytes.data()), bytes.size());
+    out.write(binary->bytes, binary->length);
     out.close();
 
     return 0;

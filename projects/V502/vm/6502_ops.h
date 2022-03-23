@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "6502_types.h"
+#include "../v502_types.h"
 
 //
 // MOS Instructions

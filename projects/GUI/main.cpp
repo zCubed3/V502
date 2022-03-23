@@ -13,7 +13,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 
-#include <V502/6502_vm.h>
+#include <V502/v502.h>
 
 #define PAD_HEX_LO std::setfill('0') << std::setw(2)
 #define PAD_HEX std::setfill('0') << std::setw(4)
@@ -193,6 +193,8 @@ int main(int argc, char** argv) {
             if (bin_file.is_open()) {
                 bin_file.read(reinterpret_cast<char*>(cpu->hunk), cpu->hunk_length);
                 v502_reset_vm(cpu);
+
+                bin_file.close();
             } else {
                 call_stream << "Failed to load binary at '" << path_buf << "', does it exist? Do you have access to it?\n" << std::endl;
             }
