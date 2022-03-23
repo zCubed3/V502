@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
             }
         }
     } else {
-        std::cout << "Please provide a .bin file to execute!\nRun 'Emu502 --help' to see possible arguments." << std::endl;
+        std::cout << "Please provide a .bin file to execute!\nRun 'emu502 --help' to see possible arguments." << std::endl;
         return 1;
     }
 

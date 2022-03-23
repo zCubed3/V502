@@ -93,7 +93,7 @@ v502_assembler_instance_t* v502_create_assembler() {
     return inst;
 }
 
-v502_source_file_t* v502_load_source(const char* path) {
+const char* v502_load_source(const char* path) {
     FILE* file = fopen(path, "r");
 
     assert(file != NULL);
@@ -109,23 +109,20 @@ v502_source_file_t* v502_load_source(const char* path) {
 
     fclose(file);
 
-    v502_source_file_t* source = calloc(1, sizeof(v502_source_file_t));
-    source->source = source_str;
-
-    return source;
+    return source_str;
 }
 
-v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v502_source_file_t* source) {
+v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, const char* source) {
     assert(assembler != NULL);
     assert(source != NULL);
 
     uint32_t lines = 0;
-    uint32_t source_len = strlen(source->source);
+    uint32_t source_len = strlen(source);
 
     char* source_dupe = malloc(source_len);
-    memcpy(source_dupe, source->source, source_len);
+    memcpy(source_dupe, source, source_len);
 
-    //printf("source:\n%s\n", source->source);
+    //fprintf(stderr, "source:\n%s\n", source->source);
 
     source_line_stack_t* line_stack = calloc(1, sizeof(source_line_stack_t));
     label_placeholder_t* label_stack = NULL;
@@ -191,7 +188,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
         if (token[0] == '.') {
             if (strstr(token, "org")) {
                 if (origin_provided)
-                    printf("Multiple .org directives found, this is allowed but will override the previous directive!\n");
+                    fprintf(stderr, "Multiple .org directives found, this is allowed but will override the previous directive!\n");
 
                 sscanf(token, "org %hi", &origin);
 
@@ -228,7 +225,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
 
         // If this line starts with a colon, discard it since it's an empty label
         if (token[0] == ':') {
-            printf("Warning: On line %i there is a stray colon, did you mean to define a label?\n  src: '%s'\n", line_no, token);
+            fprintf(stderr, "Warning: On line %i there is a stray colon, did you mean to define a label?\n  src: '%s'\n", line_no, token);
             continue;
         }
 
@@ -273,9 +270,9 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
     }
 
     if (origin_provided)
-        printf("Explicit origin was provided, 0x%x\n", origin);
+        fprintf(stderr, "Explicit origin was provided, 0x%x\n", origin);
     else
-        printf("Origin wasn't provided, using default of 0x4000\n");
+        fprintf(stderr, "Origin wasn't provided, using default of 0x4000\n");
 
     // Begin assembling
     char* binary_hunk = calloc(0xFFFF + 1, 1);
@@ -294,7 +291,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
                 child_label->resolved = 1;
 
                 // TODO: If verbose
-                printf("Resolved label '%s' at 0x%x\n", child_label->symbol, child_label->loc);
+                fprintf(stderr, "Resolved label '%s' at 0x%x\n", child_label->symbol, child_label->loc);
             }
         }
 
@@ -447,8 +444,8 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v
     // After compiling we have to go through and populate the label references
     for (label_placeholder_t *label = label_stack; label != NULL; label = label->next) {
         if (!label->resolved) {
-            printf("Error: Label '%s' was unresolved after assembling!\n", label->symbol);
-            printf("  '%s' was defined on line %i\n", label->symbol, label->line_def);
+            fprintf(stderr, "Error: Label '%s' was unresolved after assembling!\n", label->symbol);
+            fprintf(stderr, "  '%s' was defined on line %i\n", label->symbol, label->line_def);
 
             // TODO: Error stack
             assert(label->resolved);

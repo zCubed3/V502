@@ -9,14 +9,8 @@ extern "C" {
 #include "../v502_types.h"
 
 //
-// Resulting structures
+// Result structures
 //
-
-// TODO: Is this redundant?
-typedef struct v502_source_file {
-    const char* source;
-} v502_source_file_t;
-
 typedef struct v502_binary_file {
     char* bytes;
     uint32_t length;
@@ -32,8 +26,8 @@ typedef struct v502_assembler_instance {
 
 v502_assembler_instance_t* v502_create_assembler();
 
-v502_source_file_t* v502_load_source(const char* path);
-v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, v502_source_file_t* source);
+const char* v502_load_source(const char* path);
+v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, const char* source);
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,8 @@ add_executable(V502GUI ${V502GUI_Sources})
 target_link_libraries(V502GUI V502Lib ${V502GUI_Libs})
 target_include_directories(V502GUI PUBLIC ${PROJECTS_DIR} "dependencies/imgui" "include")
 
+set_target_properties(V502GUI PROPERTIES OUTPUT_NAME emu502-gui)
+
 if (DEFINED WIN32)
     target_link_directories(V502GUI PUBLIC "dependencies")
 endif()

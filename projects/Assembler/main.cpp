@@ -7,19 +7,32 @@
 #include <string>
 #include <vector>
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 void print_help() {
-    std::cout << "Example: Asm502 -s test.s -o test.bin\n";
+    std::cout << "Example: asm502 -s test.s -o test.bin\n";
+    std::cout << "Pipes also work! You're allowed to do 'cat asm.s | asm502 > asm.o'\n";
     std::cout << "Arguments: \n";
     std::cout << "\t-s or --src, requires a path after, provides the assembler with a source file\n";
     std::cout << "\t-o or --out, requires a path after, tells the assembler where to output to\n";
     std::cout << std::endl;
 }
 
+#define PIPE_INPUT_BUF_SIZE 1024
+
 // Frontend for the assembler
 int main(int argc, char** argv) {
     std::string source_path, out_path;
 
-    if (argc > 3) {
+    bool pipe_in = false, pipe_out = false;
+#ifdef __linux__
+    pipe_in = !isatty(fileno(stdin));
+    pipe_out = !isatty(fileno(stdout));
+#endif
+
+    if (argc > 1) {
         std::vector<std::string> args;
 
         for (int a = 1; a < argc; a++)
@@ -90,28 +103,48 @@ int main(int argc, char** argv) {
             }
         }
     } else {
-        std::cout << "Please provide a source and output file!\nPass --help to see possible arguments!" << std::endl;
-        return 1;
+        if (!pipe_in && !pipe_out) {
+            std::cerr << "Please provide a source and output file!\nPass --help to see possible arguments!"
+                      << std::endl;
+            return 1;
+        }
     }
 
-    if (out_path.empty()) {
+    if (out_path.empty() && !pipe_out) {
         std::cerr << "Please provide a output file!" << std::endl;
         return 1;
     }
 
-    if (source_path.empty()) {
+    if (source_path.empty() && !pipe_in) {
         std::cerr << "Please provide a source file!" << std::endl;
         return 1;
     }
 
     v502_assembler_instance_t *assembler = v502_create_assembler();
 
-    v502_source_file_t *source = v502_load_source(source_path.c_str());
+    const char *source = NULL;
+    std::string str_buf = "";
+
+    if (!pipe_in)
+        source = v502_load_source(source_path.c_str());
+    else {
+        char c = 0;
+        while ((c = getc(stdin)) != EOF)
+            str_buf += c;
+
+        source = str_buf.c_str();
+    }
+
     v502_binary_file_t *binary = v502_assemble_source(assembler, source);
 
-    std::ofstream out(out_path);
-    out.write(binary->bytes, binary->length);
-    out.close();
+    if (pipe_out) {
+        fwrite(binary->bytes, binary->length, 1, stdout);
+        fflush(stdout);
+    } else {
+        std::ofstream out(out_path);
+        out.write(binary->bytes, binary->length);
+        out.close();
+    }
 
     return 0;
 }
