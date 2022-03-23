@@ -16,6 +16,17 @@
 * 6502 CPU simulator
 * 6502 assembler (give it a .s file and it'll compile a .bin of it!)
 
+### Building
+1) Download CMake for your platform
+   1) For Linux, download it using your package manager
+   2) For Windows download it from https://cmake.org/download/
+2) Generate Build files using CMake
+   1) For Linux, running `cmake -S . -B cmake-build` is sufficient when CD'ed into the source
+   2) For Windows, generate the cmake project and compile it in Visual Studio or Codeblocks
+3) Compile
+   1) For Linux, if using make generator do `make -C cmake-build` or cd into `cmake-build` and run `make`
+   2) This is self explanatory for Windows
+
 ### GUI Frontend Third Party Software
 #### [Credits](CREDITS)
 
