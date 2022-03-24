@@ -1,4 +1,4 @@
-set(V502GUI_Sources
+set(emu502-gui_Sources
     "main.cpp"
 
     "dependencies/imgui/imgui.cpp"
@@ -10,17 +10,17 @@ set(V502GUI_Sources
 )
 
 if (DEFINED WIN32)
-    set(V502GUI_Libs opengl32 glew32 glfw3)
+    set(emu502-gui_Libs opengl32 glew32 glfw3)
 else()
-    set(V502GUI_Libs GL GLEW glfw dl)
+    set(emu502-gui_Libs GL GLEW glfw dl)
 endif()
 
-add_executable(V502GUI ${V502GUI_Sources})
-target_link_libraries(V502GUI V502Lib ${V502GUI_Libs})
-target_include_directories(V502GUI PUBLIC ${PROJECTS_DIR} "dependencies/imgui" "include")
+add_executable(emu502-gui ${emu502-gui_Sources})
+target_link_libraries(emu502-gui v502lib ${emu502-gui_Libs})
+target_include_directories(emu502-gui PUBLIC ${PROJECTS_DIR} "dependencies/imgui" "include")
 
-set_target_properties(V502GUI PROPERTIES OUTPUT_NAME emu502-gui)
+set_target_properties(emu502-gui PROPERTIES OUTPUT_NAME emu502-gui)
 
 if (DEFINED WIN32)
-    target_link_directories(V502GUI PUBLIC "dependencies")
+    target_link_directories(emu502-gui PUBLIC "dependencies")
 endif()

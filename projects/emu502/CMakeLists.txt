@@ -1,9 +1,9 @@
-set(V502Loader_SOURCES
+set(emu502_SOURCES
     "main.cpp"
 )
 
-add_executable(V502Loader ${V502Loader_SOURCES})
-target_link_libraries(V502Loader V502Lib)
-target_include_directories(V502Loader PUBLIC ${PROJECTS_DIR})
+add_executable(emu502 ${emu502_SOURCES})
+target_link_libraries(emu502 v502lib)
+target_include_directories(emu502 PUBLIC ${PROJECTS_DIR})
 
-set_target_properties(V502Loader PROPERTIES OUTPUT_NAME emu502)
+set_target_properties(emu502 PROPERTIES OUTPUT_NAME emu502)

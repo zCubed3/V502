@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(V502)
+project(v502)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_C_COMPILER_ID}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE}/")
 set(CMAKE_PDB_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -14,5 +14,6 @@ set(PROJECTS_DIR "${CMAKE_SOURCE_DIR}/projects")
 
 add_subdirectory("${PROJECTS_DIR}/v502") # Core
 add_subdirectory("${PROJECTS_DIR}/emu502") # Loader program
-add_subdirectory("${PROJECTS_DIR}/asm502") # Assembler program
 add_subdirectory("${PROJECTS_DIR}/emu502-gui") # GUI program
+add_subdirectory("${PROJECTS_DIR}/asm502") # Assembler program
+add_subdirectory("${PROJECTS_DIR}/dasm502") # Disassembler program

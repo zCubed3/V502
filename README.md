@@ -1,4 +1,7 @@
-# V502 - 6502 Simulator + Assembler
+# V502 - 6502 Simulation Toolkit 
+### 6502 Simulator, Assembler, and Disassembler
+
+---
 
 #### Written in C99 using a modern C standard library! This library should be portable enough for you to integrate into a modern or old C/C++ project!
 
