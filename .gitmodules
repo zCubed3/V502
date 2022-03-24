@@ -6,3 +6,7 @@
 	path = projects/emu502-gui/dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
+[submodule "projects/frontends/emu502-gui/dependencies/imgui"]
+	path = projects/frontends/emu502-gui/dependencies/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
