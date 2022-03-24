@@ -3,7 +3,14 @@
 
 ---
 
-#### Written in C99 using a modern C standard library! This library should be portable enough for you to integrate into a modern or old C/C++ project!
+### Implementation Info
+
+1) **Written in C99 using a modern C standard library! This library should be portable enough for you to integrate into a modern or old C/C++ project!**
+   1) Functions like `strtol` and other modern `stdlib.h` and `string.h` functions used might reduce the portability of this library, this should be fixable by providing your own implementations of the following functions
+2) **The frontends are written using the C++17 standard but could be backported to earlier C++ standards, their main purpose is to provide example code!**
+   1) As far as I am aware, most of the features used are present in C++14 and below, but probably wont work with super old standards!
+
+---
 
 #### Warning: I only have about 2 1/2 years of experience using C and C++, some of the code within this project might display some of the worst practices you'll ever lay your eyes on. I apologize for this, I'm still learning!
 
