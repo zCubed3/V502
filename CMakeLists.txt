@@ -13,7 +13,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(PROJECTS_DIR "${CMAKE_SOURCE_DIR}/projects")
 
 add_subdirectory("${PROJECTS_DIR}/v502") # Core
-add_subdirectory("${PROJECTS_DIR}/emu502") # Loader program
-add_subdirectory("${PROJECTS_DIR}/emu502-gui") # GUI program
-add_subdirectory("${PROJECTS_DIR}/asm502") # Assembler program
-add_subdirectory("${PROJECTS_DIR}/dasm502") # Disassembler program
+
+# TODO: Make frontends optional
+add_subdirectory("${PROJECTS_DIR}/frontends/emu502") # Loader program
+add_subdirectory("${PROJECTS_DIR}/frontends/emu502-gui") # GUI program
+add_subdirectory("${PROJECTS_DIR}/frontends/asm502") # Assembler program
+add_subdirectory("${PROJECTS_DIR}/frontends/dasm502") # Disassembler program

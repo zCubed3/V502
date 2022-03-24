@@ -10,7 +10,7 @@ set_target_properties(asm502 PROPERTIES OUTPUT_NAME asm502)
 
 add_custom_target(copy-asm ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${PROJECTS_DIR}/asm_files
+        ${PROJECTS_DIR}/frontends/asm502/asm_files
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/asm
 )
 
