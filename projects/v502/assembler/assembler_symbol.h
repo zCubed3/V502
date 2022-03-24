@@ -1,5 +1,5 @@
-#ifndef V502_ASM_SYMBOL_H
-#define V502_ASM_SYMBOL_H
+#ifndef V502_ASSEMBLER_SYMBOL_H
+#define V502_ASSEMBLER_SYMBOL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +35,12 @@ typedef struct v502_assembler_symbol {
 
 void v502_symbol_setup_stack(v502_assembler_symbol_t** top);
 v502_word_t v502_symbol_get_opcode(v502_assembler_symbol_t* sym, v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E call_flags, int wide_arg);
+
+int v502_symbol_has_opcode(v502_assembler_symbol_t* sym, v502_byte_t opcode);
+int v502_symbol_get_arg_width(v502_assembler_symbol_t* sym, v502_byte_t opcode);
+int v502_symbol_is_arg_address(v502_assembler_symbol_t* sym, v502_byte_t opcode);
+int v502_symbol_is_arg_indirect(v502_assembler_symbol_t* sym, v502_byte_t opcode);
+int v502_symbol_get_indexing(v502_assembler_symbol_t* sym, v502_byte_t opcode);
 
 #ifdef __cplusplus
 }

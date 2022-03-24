@@ -3,9 +3,8 @@ set(v502lib_SOURCES
         "vm/6502_ops.c"
         "vm/6502_vm.c"
 
-        "assembler/asm_symbol.c"
+        "assembler/assembler_symbol.c"
         "assembler/assembler.c"
-        "assembler/disassembler.c"
 )
 
 add_library(v502lib STATIC ${v502lib_SOURCES})

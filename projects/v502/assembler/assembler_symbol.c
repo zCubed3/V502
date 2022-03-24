@@ -1,4 +1,4 @@
-#include "asm_symbol.h"
+#include "assembler_symbol.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -188,4 +188,57 @@ v502_word_t v502_symbol_get_opcode(v502_assembler_symbol_t* sym, v502_ASSEMBLER_
             return sym->now;
         }
     }
+}
+
+int v502_symbol_has_opcode(v502_assembler_symbol_t* sym, v502_byte_t opcode) {
+    assert(sym != NULL);
+
+    return
+        opcode == sym->zpg || opcode == sym->x_zpg || opcode == sym->y_zpg ||
+        opcode == sym->abs || opcode == sym->x_abs || opcode == sym->y_abs ||
+        opcode == sym->ind || opcode == sym->x_ind || opcode == sym->y_ind ||
+        opcode == sym->now || opcode == sym->only;
+}
+
+int v502_symbol_get_arg_width(v502_assembler_symbol_t* sym, v502_byte_t opcode) {
+    assert(sym != NULL);
+
+    if (opcode == sym->only)
+        return 0;
+
+    if (opcode == sym->ind || opcode == sym->x_ind || opcode == sym->y_ind) {
+        if (sym->flags & v502_ASSEMBLER_SYMBOL_FLAG_INDIRECT_WORD)
+            return 2;
+        else
+            return 1;
+    }
+
+    if (opcode == sym->abs || opcode == sym->x_abs || opcode == sym->y_abs)
+        return 2;
+
+    return 1;
+}
+
+int v502_symbol_is_arg_address(v502_assembler_symbol_t* sym, v502_byte_t opcode) {
+    return
+        opcode == sym->abs || opcode == sym->x_abs || opcode == sym->y_abs ||
+        opcode == sym->zpg || opcode == sym->x_zpg || opcode == sym->y_zpg ||
+        opcode == sym->ind || opcode == sym->x_ind || opcode == sym->y_ind;
+}
+
+int v502_symbol_is_arg_indirect(v502_assembler_symbol_t* sym, v502_byte_t opcode) {
+    return (opcode == sym->ind || opcode == sym->x_ind || opcode == sym->y_ind);
+}
+
+// 0 = none
+// 1 = x
+// 2 = y
+int v502_symbol_get_indexing(v502_assembler_symbol_t* sym, v502_byte_t opcode) {
+    if (opcode == sym->x_abs || opcode == sym->x_ind || opcode == sym->x_zpg)
+        return 1;
+
+    if (opcode == sym->y_abs || opcode == sym->y_ind || opcode == sym->y_zpg)
+        return 2;
+
+    return 0;
 }
