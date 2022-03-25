@@ -158,17 +158,12 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
 
     uint32_t source_len = strlen(source);
 
-    char* source_dupe = malloc(source_len);
+    char* source_dupe = calloc(source_len, 1);
     memcpy(source_dupe, source, source_len);
 
     source_line_stack_t* line_stack = calloc(1, sizeof(source_line_stack_t));
     label_placeholder_t* label_stack = NULL;
     message_t* message_stack = calloc(1, sizeof(message_t));
-
-    // Seek backward and set the last \n to nothing to prevent errors caused by LF endings
-    uint32_t last_line_idx = source_len - 1;
-    while (source_dupe[last_line_idx] != '\n')
-        last_line_idx--;
 
     // We find duplicate \n's and convert the first to a '\r'
     // This is to get around strtok() treating "\n\n" as one!
@@ -184,8 +179,6 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
             nl_count = 0;
         }
     }
-
-    source_dupe[last_line_idx] = '\0';
 
     // Compiler data
     v502_word_t origin = 0x4000;
@@ -578,7 +571,6 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
         fprintf(stderr, "%s\n", message->contents);
         fprintf(stderr, "  on line %i\n", message->where);
     }
-
 
     v502_binary_file_t* bin_file = calloc(1, sizeof(v502_binary_file_t));
     bin_file->bytes = binary_hunk;

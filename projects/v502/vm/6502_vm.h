@@ -78,6 +78,9 @@ void v502_safe_add_vm(v502_6502vm_t *vm, v502_byte_t val);
 // Subtracts and sets the overflow flag, please do this rather than subtracting directly from the accumulator inside of C!
 void v502_safe_sub_vm(v502_6502vm_t *vm, v502_byte_t val);
 
+// Sets the cpu flags accordingly for compare ops
+void v502_compare_vm(v502_6502vm_t* vm, v502_byte_t lhs, v502_byte_t rhs);
+
 #ifdef __cplusplus
 };
 #endif

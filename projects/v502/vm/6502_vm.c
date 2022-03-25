@@ -33,6 +33,9 @@ void v502_reset_vm(v502_6502vm_t *vm) {
 
     v502_word_t org = v502_make_word(vm->hunk[v502_MAGIC_VECTOR_INDEX + 1], vm->hunk[v502_MAGIC_VECTOR_INDEX]);
 
+    vm->accumulator = vm->index_x = vm->index_y = 0;
+    vm->stack_ptr = 0xFF;
+
     vm->program_counter = org;
 }
 
@@ -74,4 +77,15 @@ void v502_safe_sub_vm(v502_6502vm_t *vm, v502_byte_t val) {
         vm->flags &= ~(v502_STATE_FLAG_OVERFLOW | v502_STATE_FLAG_CARRY);
 
     vm->accumulator += -(int8_t)val;
+}
+
+void v502_compare_vm(v502_6502vm_t* vm, v502_byte_t lhs, v502_byte_t rhs) {
+    vm->flags &= ~(v502_STATE_FLAG_CARRY | v502_STATE_FLAG_ZERO);
+
+    if (lhs > rhs)
+        vm->flags |= (v502_STATE_FLAG_CARRY);
+    else if (lhs == rhs) {
+        vm->flags |= (v502_STATE_FLAG_CARRY | v502_STATE_FLAG_ZERO);
+        vm->flags &= ~v502_STATE_FLAG_NEGATIVE;
+    }
 }

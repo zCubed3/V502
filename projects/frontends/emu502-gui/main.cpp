@@ -109,18 +109,16 @@ int main(int argc, char** argv) {
                     call_stream << "Encountered exception while trying to cycle the CPU (check console for specifics!):\n" << err.what() << "\n" << std::endl;
                 }
 
-                // TODO: Restore image functionality
                 // We refresh the image here instead because of performance
-                //uint8_t pixels[256 * 3];
-                //for (int p = 0; p < 256; p++) {
-                //    auto o = p * 3;
-                //    pixels[o] = cpu->get_at_page(0x50, p);
-                //    pixels[o + 1] = cpu->get_at_page(0x51, p);
-                //    pixels[o + 2] = cpu->get_at_page(0x52, p);
-                //}
+                uint8_t pixels[256 * 3];
+                for (int p = 0; p < 256; p++) {
+                    auto o = p * 3;
+                    pixels[o] = cpu->hunk[v502_make_word(0x50, p)];
+                    pixels[o + 1] = cpu->hunk[v502_make_word(0x51, p)];
+                    pixels[o + 2] = cpu->hunk[v502_make_word(0x52, p)];
+                }
 
-                //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
             }
         } else
             cycle_wait = 0.0F;
