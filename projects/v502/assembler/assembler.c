@@ -10,7 +10,7 @@
 
 typedef struct source_line {
     char* line;
-    uint32_t no;
+    uint32_t line_no;
     struct source_line* next;
 } source_line_t;
 
@@ -41,6 +41,7 @@ typedef enum LABEL_REFERENCE_TYPE {
 
 typedef struct label_referencer {
     uint32_t where;
+    uint32_t line_no;
     LABEL_REFERENCE_TYPE_E ref_type;
     struct label_referencer* next;
 } label_referencer_t;
@@ -68,7 +69,7 @@ void push_label_placeholder(label_placeholder_t* stack, label_placeholder_t* lab
     tail->next = label;
 }
 
-void push_label_reference(label_placeholder_t* label, uint32_t where, LABEL_REFERENCE_TYPE_E type) {
+void push_label_reference(label_placeholder_t* label, uint32_t where, LABEL_REFERENCE_TYPE_E type, uint32_t line_no) {
     assert(label != NULL);
 
     label_referencer_t* tail = NULL;
@@ -79,6 +80,7 @@ void push_label_reference(label_placeholder_t* label, uint32_t where, LABEL_REFE
     label_referencer_t* ref = calloc(1, sizeof(label_referencer_t));
     ref->ref_type = type;
     ref->where = where;
+    ref->line_no = line_no;
 
     if (tail == NULL)
         label->top_ref = ref;
@@ -273,7 +275,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
 
         source_line_t* line = calloc(1, sizeof(source_line_t));
         line->line = line_dupe;
-        line->no = line_no;
+        line->line_no = line_no;
 
         push_source_line_stack(line_stack, line);
     }
@@ -295,7 +297,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
     for (source_line_t* child = line_stack->top; child != NULL; child = child->next) {
         // If we have unresolved labels behind this line we must resolve them
         for (label_placeholder_t* child_label = label_stack; child_label != NULL; child_label = child_label->next) {
-            if (child_label->line_def < child->no && !child_label->resolved) {
+            if (child_label->line_def < child->line_no && !child_label->resolved) {
                 child_label->loc = write_origin;
                 child_label->resolved = 1;
 
@@ -444,7 +446,7 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
                             if (sym->flags & v502_ASSEMBLER_SYMBOL_FLAG_RELATIVE)
                                 ref_type = LABEL_REFERENCE_TYPE_BRANCH;
 
-                            push_label_reference(child_label, write_origin + 1, ref_type);
+                            push_label_reference(child_label, write_origin + 1, ref_type, child->line_no);
 
                             has_arg = 1;
                             wide_arg = !has_indexer;
@@ -497,9 +499,12 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
             } else {
                 uint16_t start = label->loc;
                 uint16_t end = ref->where;
-                uint16_t rel = end - start;
+                int16_t rel = end - start;
 
-
+                if (rel < -127 || rel > 128) {
+                    fprintf(stderr, "ERROR: Long branch detected on line %i!\n", ref->line_no);
+                    fprintf(stderr, "  Attempt to jump %i spaces! You can only move 127 bytes back and 128 forward!", ref->line_no);
+                }
 
                 binary_hunk[ref->where] = (char)(start - end);
             }

@@ -33,6 +33,7 @@
 2) Generate Build files using CMake
    1) For Linux, running `cmake -S . -B cmake-build` is sufficient when CD'ed into the source
    2) For Windows, generate the cmake project and compile it in Visual Studio or Codeblocks
+   3) **NOTE: If building the frontends too put `-DV502_FRONTENDS=""` and `-DV502_FRONTEND_GUI=""` in the cmake arguments!**
 3) Compile
    1) For Linux, if using make generator do `make -C cmake-build` or cd into `cmake-build` and run `make`
    2) This is self explanatory for Windows
