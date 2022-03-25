@@ -46,6 +46,15 @@ v502_DEFINE_OPFUNC(STA) {
     return V502_OP_STATE_SUCCESS;
 }
 
+v502_DEFINE_OPFUNC(LDA) {
+    uint16_t where;
+    if (op == v502_MOS_OP_LDA_NOW)
+        where = ++vm->program_counter;
+
+    vm->accumulator = vm->hunk[where];
+    return V502_OP_STATE_SUCCESS;
+}
+
 v502_DEFINE_OPFUNC(CMP) {
     v502_byte_t rhs = 0;
 
@@ -186,6 +195,11 @@ v502_DEFINE_OPFUNC(JMP) {
     if (op == v502_MOS_OP_JMP_ABS)
         vm->program_counter = v502_make_word(vm->hunk[vm->program_counter + 2], vm->hunk[vm->program_counter + 1]);
 
+    if (op == v502_MOS_OP_JMP_IND) {
+        uint16_t ind = v502_make_word(vm->hunk[vm->program_counter + 2], vm->hunk[vm->program_counter + 1]);
+        vm->program_counter = v502_make_word(vm->hunk[ind + 1], vm->hunk[ind]);
+    }
+
     return V502_OP_STATE_SUCCESS_NO_COUNT;
 }
 
@@ -210,6 +224,8 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     vm->opfuncs[v502_MOS_OP_STA_ABS] = OP_STA;
     vm->opfuncs[v502_MOS_OP_STA_X_ABS] = OP_STA;
     vm->opfuncs[v502_MOS_OP_STA_Y_ABS] = OP_STA;
+
+    vm->opfuncs[v502_MOS_OP_LDA_NOW] = OP_LDA;
 
     vm->opfuncs[v502_MOS_OP_CMP_NOW] = OP_CMP;
 
@@ -245,6 +261,7 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     vm->opfuncs[v502_MOS_OP_BEQ] = OP_BEQ;
 
     vm->opfuncs[v502_MOS_OP_JMP_ABS] = OP_JMP;
+    vm->opfuncs[v502_MOS_OP_JMP_IND] = OP_JMP;
 
     // TODO: W65C02 Ops
     if (vm->feature_set == v502_FEATURESET_W65C02) {

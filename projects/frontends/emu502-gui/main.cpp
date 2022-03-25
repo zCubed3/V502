@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     v502_6502vm_createinfo_t createinfo {};
     createinfo.hunk_size = 0xFFFF + 1;
 
-    v502_6502vm_t *cpu = v502_create_vm(&createinfo);
+    v502_6502vm_t *vm = v502_create_vm(&createinfo);
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -60,6 +60,8 @@ int main(int argc, char** argv) {
 
     float cycle_wait = 0.0F;
 
+    int substeps = 1;
+
     // Memory for the 16x16 image that lives in page 5000 - 52FF
     GLuint image_buffer;
     glGenTextures(1, &image_buffer);
@@ -82,10 +84,24 @@ int main(int argc, char** argv) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("CPU");
+        //ImGui::ShowDemoWindow();
 
-        if (ImGui::Checkbox("VSync? (Limits CPU max speed!)", &vsync))
-            glfwSwapInterval(vsync ? 1 : 0);
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        ImGui::Begin("V502 VM", nullptr, ImGuiWindowFlags_MenuBar);
+
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Settings")) {
+                ImGui::MenuItem("VSync", nullptr, &vsync);
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMenuBar();
+        }
+
+        glfwSwapInterval(vsync ? 1 : 0);
 
         bool manual_cycle = ImGui::Button("Step");
 
@@ -93,6 +109,11 @@ int main(int argc, char** argv) {
 
         ImGui::Checkbox("Auto Step", &auto_cycle);
         ImGui::InputInt("Step Interval (ms)", &cycle_interval);
+
+        ImGui::InputInt("Substeps", &substeps);
+
+        if (substeps < 1)
+            substeps = 1;
 
         if (cycle_interval < 0)
             cycle_interval = 0;
@@ -104,7 +125,8 @@ int main(int argc, char** argv) {
                 cycle_wait = 0;
 
                 try {
-                    v502_cycle_vm(cpu);
+                    for (int s = 0; s < substeps; s++)
+                        v502_cycle_vm(vm);
                 } catch (std::exception& err) {
                     call_stream << "Encountered exception while trying to cycle the CPU (check console for specifics!):\n" << err.what() << "\n" << std::endl;
                 }
@@ -113,9 +135,9 @@ int main(int argc, char** argv) {
                 uint8_t pixels[256 * 3];
                 for (int p = 0; p < 256; p++) {
                     auto o = p * 3;
-                    pixels[o] = cpu->hunk[v502_make_word(0x50, p)];
-                    pixels[o + 1] = cpu->hunk[v502_make_word(0x51, p)];
-                    pixels[o + 2] = cpu->hunk[v502_make_word(0x52, p)];
+                    pixels[o] = vm->hunk[v502_make_word(0x50, p)];
+                    pixels[o + 1] = vm->hunk[v502_make_word(0x51, p)];
+                    pixels[o + 2] = vm->hunk[v502_make_word(0x52, p)];
                 }
 
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
@@ -134,17 +156,17 @@ int main(int argc, char** argv) {
         memory_stream << "| ";
 
         for (uint8_t t = 0; t < 8; t++) {
-            memory_stream << ((cpu->flags >> t) & 1) << " ";
+            memory_stream << ((vm->flags >> t) & 1) << " ";
         }
 
         memory_stream << "|\n\n";
         memory_stream << "Registers: \n";
 
-        memory_stream << "| IX = " << PAD_HEX_LO << +cpu->index_x;
-        memory_stream << " | IY = " << PAD_HEX_LO << +cpu->index_y;
-        memory_stream << " | AC = " << PAD_HEX_LO << +cpu->accumulator;
-        memory_stream << " | ST = " << PAD_HEX_LO << +cpu->stack_ptr;
-        memory_stream << " | PC = " << PAD_HEX << +cpu->program_counter;
+        memory_stream << "| IX = " << PAD_HEX_LO << +vm->index_x;
+        memory_stream << " | IY = " << PAD_HEX_LO << +vm->index_y;
+        memory_stream << " | AC = " << PAD_HEX_LO << +vm->accumulator;
+        memory_stream << " | ST = " << PAD_HEX_LO << +vm->stack_ptr;
+        memory_stream << " | PC = " << PAD_HEX << +vm->program_counter;
         memory_stream << " |        \n\n";
 
         ImGui::Text("%s", memory_stream.str().c_str());
@@ -170,13 +192,14 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +cpu->hunk[v502_make_word(page_number, idx)];
+                int value = +vm->hunk[v502_make_word(page_number, idx)];
                 memory_stream << PAD_HEX_LO << value << " ";
             }
 
             memory_stream << "\n";
+
         }
-        memory_stream << std::endl;
+        memory_stream << std::flush;
         ImGui::Text("%s", memory_stream.str().c_str());
 
         ImGui::End();
@@ -189,8 +212,8 @@ int main(int argc, char** argv) {
             std::ifstream bin_file(path_buf, std::ifstream::binary);
 
             if (bin_file.is_open()) {
-                bin_file.read(reinterpret_cast<char*>(cpu->hunk), cpu->hunk_length);
-                v502_reset_vm(cpu);
+                bin_file.read(reinterpret_cast<char*>(vm->hunk), vm->hunk_length);
+                v502_reset_vm(vm);
 
                 bin_file.close();
             } else {
@@ -204,14 +227,14 @@ int main(int argc, char** argv) {
 
         ImGui::Text("Program Memory Slice:");
 
-        auto lower = (cpu->program_counter) / 16;
-        auto upper = (cpu->program_counter + 16) / 16;
+        auto lower = (vm->program_counter) / 16;
+        auto upper = (vm->program_counter + 16) / 16;
 
         memory_stream << "              ";
         for (int x = lower; x < upper; x++) {
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                memory_stream << (idx == cpu->program_counter ? "vv" : "  ") << " ";
+                memory_stream << (idx == vm->program_counter ? "vv" : "  ") << " ";
             }
         }
         memory_stream << "\n";
@@ -222,7 +245,7 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +cpu->hunk[idx];
+                int value = +vm->hunk[idx];
                 memory_stream << PAD_HEX_LO << value << " ";
             }
             memory_stream << "\n";
@@ -233,14 +256,17 @@ int main(int argc, char** argv) {
 
         ImGui::End();
 
-        ImGui::Begin("Simulation Log");
+        ImGui::Begin("Simulation Stats");
 
-        if (ImGui::Button("Clear")) {
-            call_stream.str("");
-            call_stream.clear();
-        }
+        auto io = ImGui::GetIO();
 
-        ImGui::Text("%s", call_stream.str().c_str());
+        ImGui::Text("FPS: %f", io.Framerate);
+        ImGui::Text("DeltaTime: %f", io.DeltaTime);
+
+        ImGui::Spacing();
+
+        ImGui::Text("If auto stepping at max speed:");
+        ImGui::Text("Cycles (CPS) = %f", io.Framerate * substeps);
 
         ImGui::End();
 

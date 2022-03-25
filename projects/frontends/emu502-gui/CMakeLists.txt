@@ -5,6 +5,7 @@ set(emu502-gui_Sources
     "dependencies/imgui/imgui_draw.cpp"
     "dependencies/imgui/imgui_widgets.cpp"
     "dependencies/imgui/imgui_tables.cpp"
+    "dependencies/imgui/imgui_demo.cpp"
     "dependencies/imgui/backends/imgui_impl_glfw.cpp"
     "dependencies/imgui/backends/imgui_impl_opengl3.cpp"
 )

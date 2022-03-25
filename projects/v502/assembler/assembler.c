@@ -661,10 +661,10 @@ const char* v502_disassemble_binary(v502_assembler_instance_t* assembler, v502_b
         fprintf(temp_file, " ; %02x ", op);
 
         if (width > 0) {
-            fprintf(temp_file, "%02x ", (char)arg);
+            fprintf(temp_file, "%02x ", ((uint8_t)arg));
 
             if (width > 1)
-                fprintf(temp_file, "%02x ", (char)(arg >> 8));
+                fprintf(temp_file, "%02x ", ((uint8_t)(arg >> 8)));
         }
 
         fprintf(temp_file, "\n");
