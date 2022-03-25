@@ -7,7 +7,8 @@
 #include <string>
 #include <vector>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__unix__)
+#define UNIX_LIKE
 #include <unistd.h>
 #endif
 
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
     std::string source_path, out_path;
 
     bool pipe_in = false, pipe_out = false;
-#ifdef __linux__
+#ifdef UNIX_LIKE
     pipe_in = !isatty(fileno(stdin));
     pipe_out = !isatty(fileno(stdout));
 #endif

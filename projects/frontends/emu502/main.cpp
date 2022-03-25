@@ -10,7 +10,8 @@
 #include <Windows.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__unix__)
+#define UNIX_LIKE
 #include <unistd.h>
 #endif
 
@@ -26,7 +27,7 @@ void zero_cursor() {
     std::cout << std::flush;
 #endif
 
-#ifdef __linux__
+#ifdef UNIX_LIKE
     std::cout << "\033[" << 0 << ";" << 0 << "H" << std::flush;
 #endif
 }
@@ -212,11 +213,11 @@ int main(int argc, char** argv) {
                 int value = +cpu->hunk[idx];
 
                 if (cpu->program_counter == idx) {
-#if __linux__
+#ifdef UNIX_LIKE
                     std::cout << "\033[1;4;93m";
 #endif
 
-#if _WIN32
+#ifdef _WIN32
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | COMMON_LVB_UNDERSCORE);
 #endif
                 }
@@ -227,12 +228,12 @@ int main(int argc, char** argv) {
                 std::cout << value;
 
                 if (cpu->program_counter == idx) {
-#if __linux__
+#ifdef UNIX_LIKE
 
                     std::cout << "\033[0m";
 #endif
 
-#if _WIN32
+#ifdef _WIN32
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
 #endif
                 }
@@ -286,7 +287,7 @@ int main(int argc, char** argv) {
             std::cout << "\n";
         }
 
-#ifdef __linux__
+#ifdef UNIX_LIKE
         if (custom_time)
             usleep(interval * 1000);
         else
