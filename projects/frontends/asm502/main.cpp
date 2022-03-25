@@ -146,5 +146,7 @@ int main(int argc, char** argv) {
         out.close();
     }
 
+    std::cerr << std::endl;
+
     return 0;
 }
