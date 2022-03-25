@@ -8,6 +8,10 @@
 
 #include "../vm/6502_vm.h"
 
+//
+// Assembler
+//
+
 typedef struct source_line {
     char* line;
     uint32_t line_no;
@@ -88,6 +92,39 @@ void push_label_reference(label_placeholder_t* label, uint32_t where, LABEL_REFE
         tail->next = ref;
 }
 
+typedef enum MESSAGE_SEVERITY {
+    MESSAGE_SEVERITY_NONE, // Special, this is for a top level message
+    MESSAGE_SEVERITY_NOTE,
+    MESSAGE_SEVERITY_WARNING,
+    MESSAGE_SEVERITY_ERROR,
+} MESSAGE_SEVERITY_E;
+
+typedef struct message {
+    const char* contents;
+    uint32_t where;
+    MESSAGE_SEVERITY_E severity;
+    struct message* next;
+} message_t;
+
+void push_message(message_t* message, const char* contents, uint32_t where, MESSAGE_SEVERITY_E severity) {
+    assert(message != NULL);
+
+    message_t* tail = NULL;
+    for (message_t* child = message->next; child != NULL; child = child->next) {
+        tail = child;
+    }
+
+    message_t* msg = calloc(1, sizeof(message_t));
+    msg->contents = contents;
+    msg->severity = severity;
+    msg->where = where;
+
+    if (tail == NULL)
+        message->next = msg;
+    else
+        tail->next = msg;
+}
+
 v502_assembler_instance_t* v502_create_assembler() {
     v502_assembler_instance_t *inst = calloc(1, sizeof(v502_assembler_instance_t));
 
@@ -119,16 +156,14 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
     assert(assembler != NULL);
     assert(source != NULL);
 
-    uint32_t lines = 0;
     uint32_t source_len = strlen(source);
 
     char* source_dupe = malloc(source_len);
     memcpy(source_dupe, source, source_len);
 
-    //fprintf(stderr, "source:\n%s\n", source->source);
-
     source_line_stack_t* line_stack = calloc(1, sizeof(source_line_stack_t));
     label_placeholder_t* label_stack = NULL;
+    message_t* message_stack = calloc(1, sizeof(message_t));
 
     // Seek backward and set the last \n to nothing to prevent errors caused by LF endings
     uint32_t last_line_idx = source_len - 1;
@@ -331,7 +366,6 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
 
         // If we encounter parenthesis, this is indirect!
         // We do need to close the parenthesis though!
-        // TODO: Error stack!
         int open_parenthesis = 0;
         for (uint32_t c = 0; c < line_len; c++) {
             if (child->line[c] == '(')
@@ -341,6 +375,11 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
                 open_parenthesis = 0;
                 call_flags |= v502_ASSEMBLER_SYMBOL_CALL_FLAG_INDIRECT;
             }
+        }
+
+        if (open_parenthesis) {
+            push_message(message_stack, "Parenthesis left open!", child->line_no, MESSAGE_SEVERITY_ERROR);
+            continue;
         }
 
         // If we encounter a number marker, we are doing a NOW call
@@ -439,8 +478,9 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
                                     ref_type = LABEL_REFERENCE_TYPE_LEFT;
                                 else if (indexer == 1)
                                     ref_type = LABEL_REFERENCE_TYPE_RIGHT;
-                                else
-                                    assert(ref_type); // TODO: Error stack
+                                else {
+                                    push_message(message_stack, "Label indexer out of range, only 0 and 1 can be used!", child->line_no, MESSAGE_SEVERITY_ERROR);
+                                }
                             }
 
                             if (sym->flags & v502_ASSEMBLER_SYMBOL_FLAG_RELATIVE)
@@ -467,8 +507,10 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
         // We then pass this into v502_symbol_get_opcode
         v502_word_t opcode = v502_symbol_get_opcode(sym, call_flags, wide_arg);
 
-        // TODO: Error stack!
-        assert(opcode != v502_ASSEMBLER_MAGIC_MISSING_CODE);
+        if (opcode == v502_ASSEMBLER_MAGIC_MISSING_CODE) {
+            push_message(message_stack, "Missing opcode for given operation, is there a syntax error?", child->line_no, MESSAGE_SEVERITY_ERROR);
+            continue;
+        }
 
         binary_hunk[write_origin++] = (char) opcode;
 
@@ -482,11 +524,8 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
     // After compiling we have to go through and populate the label references
     for (label_placeholder_t *label = label_stack; label != NULL; label = label->next) {
         if (!label->resolved) {
-            fprintf(stderr, "Error: Label '%s' was unresolved after assembling!\n", label->symbol);
-            fprintf(stderr, "  '%s' was defined on line %i\n", label->symbol, label->line_def);
-
-            // TODO: Error stack
-            assert(label->resolved);
+            fprintf(stderr, "Label '%s' was unresolved after assembling!\n", label->symbol);
+            push_message(message_stack, "Label wasn't resolved!", label->line_def, MESSAGE_SEVERITY_ERROR);
         }
 
         for (label_referencer_t *ref = label->top_ref; ref != NULL; ref = ref->next) {
@@ -509,6 +548,35 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
                 binary_hunk[ref->where] = (char)(start - end);
             }
         }
+    }
+
+    int has_error = 0;
+    for (message_t* message = message_stack; message != NULL; message = message->next) {
+        if (message->severity == MESSAGE_SEVERITY_ERROR)
+            has_error = 1;
+
+        if (message->severity == MESSAGE_SEVERITY_NONE || message->contents == NULL)
+            continue;
+
+        switch (message->severity) {
+            default:
+                break;
+
+            case MESSAGE_SEVERITY_NOTE:
+                fprintf(stderr, "NOTE: ");
+                break;
+
+            case MESSAGE_SEVERITY_WARNING:
+                fprintf(stderr, "WARNING: ");
+                break;
+
+            case MESSAGE_SEVERITY_ERROR:
+                fprintf(stderr, "ERROR: ");
+                break;
+        }
+
+        fprintf(stderr, "%s\n", message->contents);
+        fprintf(stderr, "  on line %i\n", message->where);
     }
 
 
