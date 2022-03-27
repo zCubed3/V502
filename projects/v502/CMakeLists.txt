@@ -9,5 +9,12 @@ set(v502lib_SOURCES
 
 add_library(v502lib STATIC ${v502lib_SOURCES})
 target_include_directories(v502lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(v502lib PUBLIC V502_INCLUDE_ASSEMBLER)
 
 set_target_properties(v502lib PROPERTIES OUTPUT_NAME v502)
+
+add_library(v502lib_shared SHARED "misc/shared_lib.c" ${v502lib_SOURCES})
+target_include_directories(v502lib_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(v502lib_shared PUBLIC V502_SHARED_LIBRARY V502_INCLUDE_ASSEMBLER)
+
+set_target_properties(v502lib_shared PROPERTIES OUTPUT_NAME v502)

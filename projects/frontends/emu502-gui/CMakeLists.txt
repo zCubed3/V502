@@ -17,7 +17,7 @@ else()
 endif()
 
 add_executable(emu502-gui ${emu502-gui_Sources})
-target_link_libraries(emu502-gui v502lib ${emu502-gui_Libs})
+target_link_libraries(emu502-gui ${emu502-gui_Libs})
 target_include_directories(emu502-gui PUBLIC ${PROJECTS_DIR} "dependencies/imgui" "include")
 
 set_target_properties(emu502-gui PROPERTIES OUTPUT_NAME emu502-gui)

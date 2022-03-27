@@ -10,4 +10,8 @@
 #include "assembler/assembler.h"
 #endif
 
+#ifdef V502_SHARED_LIBRARY
+#include "misc/shared_lib.h"
+#endif
+
 #endif

@@ -135,7 +135,13 @@ int main(int argc, char** argv) {
         fread(binary.bytes, binary.length, 1, stdin);
     }
 
-    std::string disassembly = v502_disassemble_binary(assembler, &binary);
+    v502_disassembly_options_t ops;
+
+    ops.produce_comment = 1;
+    ops.produce_memory_markers = 0;
+    ops.produce_origin = 1;
+
+    std::string disassembly = v502_disassemble_binary(assembler, &binary, &ops);
 
     if (pipe_out) {
         fwrite(disassembly.c_str(), disassembly.length(), 1, stdout);

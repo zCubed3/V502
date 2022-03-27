@@ -13,10 +13,63 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 
+#define V502_INCLUDE_ASSEMBLER
+#define V502_SHARED_LIBRARY
 #include <v502/v502.h>
+
+#include "math.h"
+
+#ifdef __linux__
+#define UNIX_LIKE
+#include <dlfcn.h>
+#endif
 
 #define PAD_HEX_LO std::setfill('0') << std::setw(2)
 #define PAD_HEX std::setfill('0') << std::setw(4)
+
+struct DisassemblyLine {
+    uint32_t location = 0;
+    std::string dasm;
+};
+
+typedef v502_function_table_t*(*fptr_get_function_table)();
+
+struct V502Library {
+#ifdef UNIX_LIKE
+    void* handle;
+#endif
+
+#ifdef WIN32
+    HMODULE module;
+#endif
+
+    void LoadLibrary() {
+#ifdef UNIX_LIKE
+        if (handle) {
+            dlclose(handle);
+            handle = nullptr;
+        }
+
+        handle = dlopen("./lib/libv502.so", RTLD_LAZY);
+#endif
+
+#ifdef WIN32
+        if (module) {
+            // TODO: WIN32 UnloadLibrary;
+            module = nullptr;
+        }
+
+        module = LoadLibraryA("./lib/libv502.dll");
+#endif
+    }
+
+    v502_function_table_t* GetTable() {
+#ifdef UNIX_LIKE
+        auto fptr = (fptr_get_function_table)dlsym(handle, "v502_get_function_table");
+        return fptr();
+#endif
+    }
+};
 
 int main(int argc, char** argv) {
     if (!glfwInit()) {
@@ -33,10 +86,17 @@ int main(int argc, char** argv) {
         throw std::runtime_error("GLEW failed to initialize!");
     }
 
+    V502Library lib {};
+    lib.LoadLibrary();
+
+    auto v502_functions = lib.GetTable();
+
     v502_6502vm_createinfo_t createinfo {};
     createinfo.hunk_size = 0xFFFF + 1;
 
-    v502_6502vm_t *vm = v502_create_vm(&createinfo);
+    v502_6502vm_t *vm = v502_functions->v502_create_vm(&createinfo);
+
+    v502_assembler_instance_t* assembler_instance = v502_functions->v502_create_assembler();
 
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -47,10 +107,13 @@ int main(int argc, char** argv) {
 
     ImGuiIO &imguiIO = ImGui::GetIO();
     imguiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    imguiIO.Fonts->AddFontFromFileTTF("font.ttf", 14);
 
     int page_number = 0;
     std::stringstream memory_stream;
     std::stringstream call_stream;
+
+    std::vector<DisassemblyLine> dasm_lines;
 
     char path_buf[256];
     memset(path_buf, 0, 256);
@@ -62,7 +125,8 @@ int main(int argc, char** argv) {
 
     int substeps = 1;
 
-    // Memory for the 16x16 image that lives in page 5000 - 52FF
+    // Memory for the 16x16 image that lives in page 5000 - 52FF by default, but can be shifted
+    int image_page = 0x50;
     GLuint image_buffer;
     glGenTextures(1, &image_buffer);
     glBindTexture(GL_TEXTURE_2D, image_buffer);
@@ -73,6 +137,8 @@ int main(int argc, char** argv) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     bool vsync = true;
+    bool dasm_dirty = false;
+    bool lib_reload = false;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -90,8 +156,76 @@ int main(int argc, char** argv) {
 
         ImGui::Begin("V502 VM", nullptr, ImGuiWindowFlags_MenuBar);
 
+        if (lib_reload) {
+            lib.LoadLibrary();
+            v502_functions = lib.GetTable();
+
+            auto old_vm = vm;
+            vm = v502_functions->v502_create_vm(&createinfo);
+
+            auto vm_hunk = vm->hunk;
+            auto vm_funcs = vm->opfuncs;
+
+            memcpy(vm, old_vm, sizeof(v502_6502vm_t));
+
+            vm->hunk = vm_hunk;
+            memcpy(vm->hunk, old_vm->hunk, vm->hunk_length);
+
+            vm->opfuncs = vm_funcs;
+
+            free(old_vm->hunk);
+            free(old_vm);
+
+            free(assembler_instance);
+            assembler_instance = v502_functions->v502_create_assembler();
+            dasm_dirty = true;
+
+            lib_reload = false;
+        }
+
+        if (dasm_dirty) {
+            v502_binary_file_t bin {};
+
+            bin.bytes = (char*)vm->hunk;
+            bin.length = vm->hunk_length;
+
+            v502_disassembly_options_t ops;
+
+            ops.produce_comment = 0;
+            ops.produce_memory_markers = 1;
+            ops.produce_origin = 0;
+
+            std::string raw_dasm = v502_functions->v502_disassemble_binary(assembler_instance, &bin, &ops);
+            std::stringstream raw_dasm_stream(raw_dasm);
+
+            dasm_lines.clear();
+
+            std::string raw_dasm_line;
+            while (std::getline(raw_dasm_stream, raw_dasm_line)) {
+                DisassemblyLine line;
+
+                // Trim the memory marker out and use it as a location marker
+                auto comment_idx = raw_dasm_line.find_first_of(';');
+                auto mem_line = raw_dasm_line.substr(0, comment_idx);
+
+                line.location = strtol(mem_line.c_str(), nullptr, 16);
+                line.dasm = raw_dasm_line.substr(comment_idx + 2);
+
+                dasm_lines.emplace_back(line);
+            }
+
+            dasm_dirty = false;
+        }
+
         if (ImGui::BeginMenuBar())
         {
+            if (ImGui::BeginMenu("VM")) {
+                if (ImGui::MenuItem("Reload libv502", nullptr, nullptr))
+                    lib_reload = true;
+
+                ImGui::EndMenu();
+            }
+
             if (ImGui::BeginMenu("Settings")) {
                 ImGui::MenuItem("VSync", nullptr, &vsync);
 
@@ -126,7 +260,7 @@ int main(int argc, char** argv) {
 
                 try {
                     for (int s = 0; s < substeps; s++)
-                        v502_cycle_vm(vm);
+                        v502_functions->v502_cycle_vm(vm);
                 } catch (std::exception& err) {
                     call_stream << "Encountered exception while trying to cycle the CPU (check console for specifics!):\n" << err.what() << "\n" << std::endl;
                 }
@@ -135,9 +269,9 @@ int main(int argc, char** argv) {
                 uint8_t pixels[256 * 3];
                 for (int p = 0; p < 256; p++) {
                     auto o = p * 3;
-                    pixels[o] = vm->hunk[v502_make_word(0x50, p)];
-                    pixels[o + 1] = vm->hunk[v502_make_word(0x51, p)];
-                    pixels[o + 2] = vm->hunk[v502_make_word(0x52, p)];
+                    pixels[o] = vm->hunk[v502_functions->v502_make_word(image_page, p)];
+                    pixels[o + 1] = vm->hunk[v502_functions->v502_make_word(image_page + 1, p)];
+                    pixels[o + 2] = vm->hunk[v502_functions->v502_make_word(image_page + 2, p)];
                 }
 
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 16, 16, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
@@ -192,7 +326,7 @@ int main(int argc, char** argv) {
 
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +vm->hunk[v502_make_word(page_number, idx)];
+                int value = +vm->hunk[v502_functions->v502_make_word(page_number, idx)];
                 memory_stream << PAD_HEX_LO << value << " ";
             }
 
@@ -213,8 +347,9 @@ int main(int argc, char** argv) {
 
             if (bin_file.is_open()) {
                 bin_file.read(reinterpret_cast<char*>(vm->hunk), vm->hunk_length);
-                v502_reset_vm(vm);
+                v502_functions->v502_reset_vm(vm);
 
+                dasm_dirty = true;
                 bin_file.close();
             } else {
                 call_stream << "Failed to load binary at '" << path_buf << "', does it exist? Do you have access to it?\n" << std::endl;
@@ -254,6 +389,29 @@ int main(int argc, char** argv) {
         memory_stream << std::endl;
         ImGui::Text("%s", memory_stream.str().c_str());
 
+        ImGui::Text("Disassembly:");
+
+        for (int l = 0; l < dasm_lines.size(); l++) {
+            auto line = dasm_lines[l];
+
+            uint32_t ahead = 0x0000; // How far ahead do we count it as "on this line"
+
+            if (dasm_lines.size() > l + 1) {
+                auto next = dasm_lines[l + 1];
+                ahead = (next.location - 1) - line.location;
+            }
+
+            bool on_line = vm->program_counter <= line.location + ahead && vm->program_counter >= line.location;
+
+            if (on_line)
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 213, 88, 255));
+
+            ImGui::Text("%c\t0x%04x : %s", (on_line ? '>' : ' '), line.location, line.dasm.c_str());
+
+            if (on_line)
+                ImGui::PopStyleColor();
+        }
+
         ImGui::End();
 
         ImGui::Begin("Simulation Stats");
@@ -272,12 +430,32 @@ int main(int argc, char** argv) {
 
         ImGui::Begin("Image");
 
-        ImGui::Text("Represents 0x5000 -> 0x52FF");
-        ImGui::Text("R = 0x5000 -> 0x50FF");
-        ImGui::Text("G = 0x5100 -> 0x51FF");
-        ImGui::Text("B = 0x5200 -> 0x52FF");
+        ImGui::InputInt("Image Page", &image_page);
+        image_page = std::min(253, std::max(0, image_page));
+
+        ImGui::Text("R = 0x%02x00 -> 0x%02xff", image_page, image_page);
+        ImGui::Text("G = 0x%02x00 -> 0x%02xff", image_page + 1, image_page + 1);
+        ImGui::Text("B = 0x%02x00 -> 0x%02xff", image_page + 2, image_page + 2);
 
         ImGui::Image(reinterpret_cast<void*>(image_buffer), ImVec2(128, 128));
+
+        ImGui::End();
+
+        ImGui::Begin("Symbols");
+
+        for (int o = 0; o < 255; o++) {
+            bool recognized = false;
+            for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
+                if (v502_functions->v502_symbol_has_opcode(sym, o)) {
+                    ImGui::Text("0x%02x : %s", o, sym->name);
+                    recognized = true;
+                    break;
+                }
+            }
+
+            if (!recognized)
+                ImGui::Text("0x%02x : Unknown", o);
+        }
 
         ImGui::End();
 

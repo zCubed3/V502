@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-extern const v502_word_t v502_ASSEMBLER_MAGIC_MISSING_CODE = 0xFFFF;
+const v502_word_t v502_ASSEMBLER_MAGIC_MISSING_CODE = 0xFFFF;
 
 #define OP(NAME) v502_MOS_OP_##NAME
 

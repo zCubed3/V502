@@ -31,7 +31,13 @@ v502_binary_file_t* v502_assemble_source(v502_assembler_instance_t* assembler, c
 
 // Produces a functional but simple disassembly of an assembled binary
 // Labels and other assembler directives are missing, only .org will be restored since it's easy to find!
-const char* v502_disassemble_binary(v502_assembler_instance_t* assembler, v502_binary_file_t* file);
+typedef struct v502_disassembly_options {
+    int produce_comment;
+    int produce_memory_markers;
+    int produce_origin;
+} v502_disassembly_options_t;
+
+const char* v502_disassemble_binary(v502_assembler_instance_t* assembler, v502_binary_file_t* file, v502_disassembly_options_t* options);
 
 #ifdef __cplusplus
 }

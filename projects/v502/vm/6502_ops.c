@@ -46,31 +46,17 @@ v502_DEFINE_OPFUNC(STA) {
     return V502_OP_STATE_SUCCESS;
 }
 
-v502_DEFINE_OPFUNC(LDA) {
-    uint16_t where;
-    if (op == v502_MOS_OP_LDA_NOW)
-        where = ++vm->program_counter;
-
-    vm->accumulator = vm->hunk[where];
-    return V502_OP_STATE_SUCCESS;
-}
-
-v502_DEFINE_OPFUNC(CMP) {
-    v502_byte_t rhs = 0;
-
-    if (op == v502_MOS_OP_CMP_NOW)
-        rhs = vm->hunk[++vm->program_counter];
-
-    v502_compare_vm(vm, vm->accumulator, rhs);
-    return V502_OP_STATE_SUCCESS;
-}
-
 //
 // X Register
 //
 
 v502_DEFINE_OPFUNC(INX) {
     vm->index_x += 1;
+    return V502_OP_STATE_SUCCESS;
+}
+
+v502_DEFINE_OPFUNC(DEX) {
+    vm->index_x -= 1;
     return V502_OP_STATE_SUCCESS;
 }
 
@@ -83,8 +69,13 @@ v502_DEFINE_OPFUNC(INY) {
     return V502_OP_STATE_SUCCESS;
 }
 
+v502_DEFINE_OPFUNC(DEY) {
+    vm->index_y -= 1;
+    return V502_OP_STATE_SUCCESS;
+}
+
 //
-// Transfer ops
+// Combined ops
 //
 
 // Accumulator -> Register
@@ -98,6 +89,39 @@ v502_DEFINE_OPFUNC(TRA) {
     vm->accumulator = (op == v502_MOS_OP_TXA ? vm->index_x : vm->index_y);
     return V502_OP_STATE_SUCCESS;
 }
+
+// ComPare Register
+v502_DEFINE_OPFUNC(CPR) {
+    v502_byte_t lhs = vm->accumulator;
+    v502_byte_t rhs = 0;
+
+    if (op == v502_MOS_OP_CPX_NOW)
+        lhs = vm->index_x;
+
+    if (op == v502_MOS_OP_CMP_NOW || op == v502_MOS_OP_CPX_NOW) {
+        rhs = vm->hunk[++vm->program_counter];
+    }
+
+    v502_compare_vm(vm, lhs, rhs);
+    return V502_OP_STATE_SUCCESS;
+}
+
+// LoaD Register
+v502_DEFINE_OPFUNC(LDR) {
+    uint8_t* what = &vm->accumulator;
+    uint16_t where;
+
+    if (op == v502_MOS_OP_LDX_NOW)
+        what = &vm->index_x;
+
+    if (op == v502_MOS_OP_LDA_NOW || op == v502_MOS_OP_LDX_NOW)
+        where = ++vm->program_counter;
+
+    *what = vm->hunk[where];
+
+    return V502_OP_STATE_SUCCESS;
+}
+
 
 //
 // Flow control ops
@@ -225,19 +249,25 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     vm->opfuncs[v502_MOS_OP_STA_X_ABS] = OP_STA;
     vm->opfuncs[v502_MOS_OP_STA_Y_ABS] = OP_STA;
 
-    vm->opfuncs[v502_MOS_OP_LDA_NOW] = OP_LDA;
+    vm->opfuncs[v502_MOS_OP_LDA_NOW] = OP_LDR;
 
-    vm->opfuncs[v502_MOS_OP_CMP_NOW] = OP_CMP;
+    vm->opfuncs[v502_MOS_OP_CMP_NOW] = OP_CPR;
 
     //
     // X Register
     //
     vm->opfuncs[v502_MOS_OP_INX] = OP_INX;
+    vm->opfuncs[v502_MOS_OP_DEX] = OP_DEX;
+
+    vm->opfuncs[v502_MOS_OP_LDX_NOW] = OP_LDR;
+
+    vm->opfuncs[v502_MOS_OP_CPX_NOW] = OP_CPR;
 
     //
     // Y Register
     //
     vm->opfuncs[v502_MOS_OP_INY] = OP_INY;
+    vm->opfuncs[v502_MOS_OP_DEY] = OP_DEY;
 
     //
     // Transfers
