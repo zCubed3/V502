@@ -140,10 +140,12 @@ int main(int argc, char** argv) {
     bool dasm_dirty = false;
     bool lib_reload = false;
 
+    bool long_flag_name = false, long_reg_name = false;
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
+        glClearColor(0.025F, 0.025F, 0.025F, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -223,10 +225,18 @@ int main(int argc, char** argv) {
                 if (ImGui::MenuItem("Reload libv502", nullptr, nullptr))
                     lib_reload = true;
 
+                if (ImGui::MenuItem("Refresh DASM", nullptr, nullptr))
+                    dasm_dirty = true;
+
                 ImGui::EndMenu();
             }
 
             if (ImGui::BeginMenu("Settings")) {
+                ImGui::MenuItem("Auto Step", nullptr, &auto_cycle);
+
+                ImGui::MenuItem("Long Flag Name", nullptr, &long_flag_name);
+                ImGui::MenuItem("Long Register Name", nullptr, &long_reg_name);
+
                 ImGui::MenuItem("VSync", nullptr, &vsync);
 
                 ImGui::EndMenu();
@@ -237,13 +247,7 @@ int main(int argc, char** argv) {
 
         glfwSwapInterval(vsync ? 1 : 0);
 
-        bool manual_cycle = ImGui::Button("Step");
-
-        ImGui::SameLine();
-
-        ImGui::Checkbox("Auto Step", &auto_cycle);
         ImGui::InputInt("Step Interval (ms)", &cycle_interval);
-
         ImGui::InputInt("Substeps", &substeps);
 
         if (substeps < 1)
@@ -251,6 +255,89 @@ int main(int argc, char** argv) {
 
         if (cycle_interval < 0)
             cycle_interval = 0;
+
+        ImGui::Text("Flags:");
+        ImGui::BeginTable("v502_flag_table", 8, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders, ImVec2(long_flag_name ? 390 : 180, 10));
+
+        const char* flag_names[8] = {
+                "Carry",
+                "Zero",
+                "Interrupt",
+                "Decimal",
+                "Break",
+                "---",
+                "Overflow",
+                "Negative"
+        };
+
+        const char* flag_ids[8] = {
+                "C",
+                "Z",
+                "I",
+                "D",
+                "B",
+                "-",
+                "O",
+                "N"
+        };
+
+        if (long_flag_name) {
+            for (auto &flag_name: flag_names)
+                ImGui::TableSetupColumn(flag_name, ImGuiTableColumnFlags_WidthFixed);
+        } else {
+            for (auto &flag_char: flag_ids)
+                ImGui::TableSetupColumn(flag_char, ImGuiTableColumnFlags_WidthFixed);
+        }
+
+        ImGui::TableHeadersRow();
+
+        ImGui::TableNextRow();
+
+        for (uint8_t t = 0; t < 8; t++) {
+            ImGui::TableNextColumn();
+            ImGui::Text("%02x", ((vm->flags >> t) & 1));
+        }
+
+        ImGui::EndTable();
+
+        ImGui::Text("Registers:");
+        ImGui::BeginTable("v502_register_table", 5, ImGuiTableFlags_Borders, ImVec2(long_reg_name ? 390 : 130, 10));
+
+        const char* reg_short_names[5] = { "IX", "IY", "AC", "ST", "PC" };
+        const char* reg_names[5] = { "Index X", "Index Y", "Accumulator", "Stack Pointer", "Program Counter" };
+
+        if (long_reg_name) {
+            for (auto &reg_name: reg_names)
+                ImGui::TableSetupColumn(reg_name, ImGuiTableColumnFlags_WidthFixed);
+        } else {
+            for (auto &reg_name: reg_short_names)
+                ImGui::TableSetupColumn(reg_name, ImGuiTableColumnFlags_WidthFixed);
+        }
+
+        ImGui::TableHeadersRow();
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%02x", +vm->index_x);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%02x", +vm->index_y);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%02x", +vm->accumulator);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%02x", +vm->stack_ptr);
+
+        ImGui::TableNextColumn();
+        ImGui::Text("%04x", +vm->program_counter);
+
+        ImGui::EndTable();
+
+        bool manual_cycle = ImGui::Button("Step");
+
+        ImGui::End();
 
         if (auto_cycle || manual_cycle) {
             cycle_wait += imguiIO.DeltaTime;
@@ -279,34 +366,6 @@ int main(int argc, char** argv) {
         } else
             cycle_wait = 0.0F;
 
-        memory_stream.str("");
-        memory_stream.clear();
-        memory_stream << std::hex << std::flush;
-
-        memory_stream << "CPU Info:\n\n";
-
-        memory_stream << "Flags:\n";
-        memory_stream << "| C Z I D - B V N |\n";
-        memory_stream << "| ";
-
-        for (uint8_t t = 0; t < 8; t++) {
-            memory_stream << ((vm->flags >> t) & 1) << " ";
-        }
-
-        memory_stream << "|\n\n";
-        memory_stream << "Registers: \n";
-
-        memory_stream << "| IX = " << PAD_HEX_LO << +vm->index_x;
-        memory_stream << " | IY = " << PAD_HEX_LO << +vm->index_y;
-        memory_stream << " | AC = " << PAD_HEX_LO << +vm->accumulator;
-        memory_stream << " | ST = " << PAD_HEX_LO << +vm->stack_ptr;
-        memory_stream << " | PC = " << PAD_HEX << +vm->program_counter;
-        memory_stream << " |        \n\n";
-
-        ImGui::Text("%s", memory_stream.str().c_str());
-
-        ImGui::End();
-
         ImGui::Begin("Memory");
         ImGui::InputInt("Page", &page_number);
 
@@ -316,25 +375,19 @@ int main(int argc, char** argv) {
         if (page_number > 0xFF)
             page_number = 0xFF;
 
-        memory_stream.str("");
-        memory_stream.clear();
-        memory_stream << std::hex << std::flush;
-
-        for (int x = 0; x < 16; x++) {
-            memory_stream << PAD_HEX_LO << page_number << PAD_HEX_LO << x * 16 << " -> ";
-            memory_stream << PAD_HEX_LO << page_number << PAD_HEX_LO << ((x + 1) * 16) - 1 << ": ";
-
-            for (int y = 0; y < 16; y++) {
-                int idx = x * 16 + y;
-                int value = +vm->hunk[v502_functions->v502_make_word(page_number, idx)];
-                memory_stream << PAD_HEX_LO << value << " ";
-            }
-
-            memory_stream << "\n";
-
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        for (int y = 0; y < 16; y++) {
+            v502_word_t page = v502_functions->v502_make_word(page_number, y * 16);
+            v502_word_t end = page + 15;
+            ImGui::Text("%04x -> %04x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                        page, end,
+                        vm->hunk[page], vm->hunk[page + 1], vm->hunk[page + 2], vm->hunk[page + 3],
+                        vm->hunk[page + 4], vm->hunk[page + 5], vm->hunk[page + 6], vm->hunk[page + 7],
+                        vm->hunk[page + 8], vm->hunk[page + 9], vm->hunk[page + 10], vm->hunk[page + 11],
+                        vm->hunk[page + 12], vm->hunk[page + 13], vm->hunk[page + 14], vm->hunk[page + 15]
+            );
         }
-        memory_stream << std::flush;
-        ImGui::Text("%s", memory_stream.str().c_str());
+        ImGui::PopStyleVar();
 
         ImGui::End();
 
@@ -441,20 +494,105 @@ int main(int argc, char** argv) {
 
         ImGui::End();
 
-        ImGui::Begin("Symbols");
+        ImGui::Begin("Opcode Debugger");
 
-        for (int o = 0; o < 255; o++) {
-            bool recognized = false;
-            for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
-                if (v502_functions->v502_symbol_has_opcode(sym, o)) {
-                    ImGui::Text("0x%02x : %s", o, sym->name);
-                    recognized = true;
-                    break;
+        auto fallback_func = v502_functions->v502_get_fallback_func();
+        for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
+            if (ImGui::TreeNode(sym->name)) {
+                // This is SUPER hacky, but we can check which opcodes are defined since in memory the symbols are technically just int arrays!
+                bool is_loner = sym->only != 0xFFFF;
+
+                ImGui::PushID(sym->name);
+                ImGui::BeginTable("##symbol_table", 3, ImGuiTableFlags_Borders);
+
+                ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("CODE", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("STATE", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableHeadersRow();
+
+                if (is_loner) {
+                    ImGui::TableNextRow();
+
+                    bool is_missing = vm->opfuncs[sym->only] == fallback_func;
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("IMM");
+                    ImGui::TableNextColumn();
+
+                    ImGui::Text("%02x", sym->only);
+                    ImGui::TableNextColumn();
+
+                    if (is_missing) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                        ImGui::Text("NO IMPL");
+                        ImGui::PopStyleColor();
+                    } else {
+                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
+                        ImGui::Text("HAS IMPL");
+                        ImGui::PopStyleColor();
+                    }
+                } else {
+                    uint16_t *opcode = &sym->zpg;
+
+                    const char* sym_names[10] = {
+                            "ZPG",
+                            "ZPG_X",
+                            "ZPG_Y",
+                            "ABS",
+                            "ABS_X",
+                            "ABS_Y",
+                            "IND",
+                            "IND_X",
+                            "IND_Y",
+                            "NOW",
+                    };
+
+                    bool all_missing = true;
+                    for (int o = 0; o < 10; o++) {
+                        if (opcode[o] == 0xFFFF)
+                            continue;
+
+                        all_missing = false;
+
+                        if (o != 9 && o != 0)
+                            ImGui::TableNextRow();
+
+                        ImGui::TableNextColumn();
+                        ImGui::Text("%s", sym_names[o]);
+                        ImGui::TableNextColumn();
+
+                        // Check if this is missing from the VM
+                        bool is_missing = vm->opfuncs[opcode[o]] == fallback_func;
+
+                        ImGui::Text("%02x", opcode[o]);
+                        ImGui::TableNextColumn();
+
+                        if (is_missing) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                            ImGui::Text("NO IMPL");
+                            ImGui::PopStyleColor();
+                        } else {
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
+                            ImGui::Text("HAS IMPL");
+                            ImGui::PopStyleColor();
+                        }
+                    }
+
+                    if (all_missing) {
+                        for (int x = 0; x < 3; x++) {
+                            ImGui::TableNextColumn();
+                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                            ImGui::Text("MISSING ALL");
+                            ImGui::PopStyleColor();
+                        }
+                    }
                 }
-            }
 
-            if (!recognized)
-                ImGui::Text("0x%02x : Unknown", o);
+                ImGui::EndTable();
+                ImGui::PopID();
+
+                ImGui::TreePop();
+            }
         }
 
         ImGui::End();

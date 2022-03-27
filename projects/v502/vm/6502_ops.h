@@ -150,6 +150,8 @@ V502_OP_STATUS_E OP_TAX(v502_6502vm_t* vm, v502_byte_t op) {
 
 void v502_populate_ops_vm(v502_6502vm_t* vm);
 
+v502_opfunc_t v502_get_fallback_func();
+
 #ifdef __cplusplus
 };
 #endif

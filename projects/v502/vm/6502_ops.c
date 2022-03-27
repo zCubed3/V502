@@ -302,3 +302,7 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
         if (vm->opfuncs[o] == NULL)
             vm->opfuncs[o] = OP_UNKNOWN;
 }
+
+v502_opfunc_t v502_get_fallback_func() {
+    return OP_UNKNOWN;
+}

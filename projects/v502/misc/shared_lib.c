@@ -8,6 +8,7 @@ v502_function_table_t* v502_get_function_table() {
     ftable->v502_create_vm = v502_create_vm;
     ftable->v502_reset_vm = v502_reset_vm;
     ftable->v502_cycle_vm = v502_cycle_vm;
+    ftable->v502_get_fallback_func = v502_get_fallback_func;
 
     ftable->v502_make_word = v502_make_word;
 

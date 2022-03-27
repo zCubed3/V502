@@ -18,6 +18,8 @@ typedef struct v502_function_table {
     void(*v502_reset_vm)(v502_6502vm_t*);
     int(*v502_cycle_vm)(v502_6502vm_t*);
 
+    v502_opfunc_t(*v502_get_fallback_func)();
+
     v502_word_t(*v502_make_word)(v502_byte_t, v502_byte_t);
 
 #ifdef V502_INCLUDE_ASSEMBLER
