@@ -496,6 +496,91 @@ int main(int argc, char** argv) {
 
         ImGui::Begin("Opcode Debugger");
 
+        ImGui::BeginTable("opcode_example_table", 2, ImGuiTableFlags_Borders);
+
+        ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("WHAT", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableHeadersRow();
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("IMM");
+        ImGui::TableNextColumn();
+        ImGui::Text("Immediate (only 1 opcode)");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("NOW");
+        ImGui::TableNextColumn();
+        ImGui::Text("Now");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ZPG");
+        ImGui::TableNextColumn();
+        ImGui::Text("Zero Page");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ZPG_X");
+        ImGui::TableNextColumn();
+        ImGui::Text("Zero Page X Indexed");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ZPG_Y");
+        ImGui::TableNextColumn();
+        ImGui::Text("Zero Page Y Indexed");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ABS");
+        ImGui::TableNextColumn();
+        ImGui::Text("Absolute");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ABS_X");
+        ImGui::TableNextColumn();
+        ImGui::Text("Absolute X Indexed");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("ABS_Y");
+        ImGui::TableNextColumn();
+        ImGui::Text("Absolute Y Indexed");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("IND");
+        ImGui::TableNextColumn();
+        ImGui::Text("Indirect");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("IND_X");
+        ImGui::TableNextColumn();
+        ImGui::Text("Indirect X Indexed");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+        ImGui::Text("IND_Y");
+        ImGui::TableNextColumn();
+        ImGui::Text("Indirect Y Indexed");
+
+        ImGui::EndTable();
+
         auto fallback_func = v502_functions->v502_get_fallback_func();
         for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
             if (ImGui::TreeNode(sym->name)) {

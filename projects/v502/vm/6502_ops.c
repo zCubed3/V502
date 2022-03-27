@@ -60,6 +60,16 @@ v502_DEFINE_OPFUNC(DEX) {
     return V502_OP_STATE_SUCCESS;
 }
 
+v502_DEFINE_OPFUNC(TSX) {
+    vm->index_x = vm->stack_ptr;
+    return V502_OP_STATE_SUCCESS;
+}
+
+v502_DEFINE_OPFUNC(TXS) {
+    vm->stack_ptr = vm->index_x;
+    return V502_OP_STATE_SUCCESS;
+}
+
 //
 // Y Register
 //
@@ -71,6 +81,32 @@ v502_DEFINE_OPFUNC(INY) {
 
 v502_DEFINE_OPFUNC(DEY) {
     vm->index_y -= 1;
+    return V502_OP_STATE_SUCCESS;
+}
+
+//
+// Stack ops
+//
+
+v502_DEFINE_OPFUNC(PLA) {
+    vm->accumulator = vm->hunk[v502_make_word(0x01, ++vm->stack_ptr)];
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr)] = 0;
+    return V502_OP_STATE_SUCCESS;
+}
+
+v502_DEFINE_OPFUNC(PHA) {
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr--)] = vm->accumulator;
+    return V502_OP_STATE_SUCCESS;
+}
+
+v502_DEFINE_OPFUNC(PLP) {
+    vm->flags = vm->hunk[v502_make_word(0x01, ++vm->stack_ptr)];
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr)] = 0;
+    return V502_OP_STATE_SUCCESS;
+}
+
+v502_DEFINE_OPFUNC(PHP) {
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr--)] = vm->flags;
     return V502_OP_STATE_SUCCESS;
 }
 
@@ -126,6 +162,9 @@ v502_DEFINE_OPFUNC(LDR) {
 //
 // Flow control ops
 //
+v502_DEFINE_OPFUNC(NOP) {
+    return V502_OP_STATE_SUCCESS; // Waste a cycle
+}
 
 v502_DEFINE_OPFUNC(BPL) {
     if (!(vm->flags & v502_STATE_FLAG_NEGATIVE)) {
@@ -259,6 +298,9 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     vm->opfuncs[v502_MOS_OP_INX] = OP_INX;
     vm->opfuncs[v502_MOS_OP_DEX] = OP_DEX;
 
+    vm->opfuncs[v502_MOS_OP_TXS] = OP_TXS;
+    vm->opfuncs[v502_MOS_OP_TSX] = OP_TSX;
+
     vm->opfuncs[v502_MOS_OP_LDX_NOW] = OP_LDR;
 
     vm->opfuncs[v502_MOS_OP_CPX_NOW] = OP_CPR;
@@ -268,6 +310,15 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     //
     vm->opfuncs[v502_MOS_OP_INY] = OP_INY;
     vm->opfuncs[v502_MOS_OP_DEY] = OP_DEY;
+
+    //
+    // Stack ops
+    //
+    vm->opfuncs[v502_MOS_OP_PLA] = OP_PLA;
+    vm->opfuncs[v502_MOS_OP_PHA] = OP_PHA;
+
+    vm->opfuncs[v502_MOS_OP_PLP] = OP_PLP;
+    vm->opfuncs[v502_MOS_OP_PHP] = OP_PHP;
 
     //
     // Transfers
@@ -281,6 +332,8 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     //
     // Branching / Flow
     //
+    vm->opfuncs[v502_MOS_OP_NOP] = OP_NOP;
+
     vm->opfuncs[v502_MOS_OP_BPL] = OP_BPL;
     vm->opfuncs[v502_MOS_OP_BMI] = OP_BMI;
     vm->opfuncs[v502_MOS_OP_BVC] = OP_BVC;
