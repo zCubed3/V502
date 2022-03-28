@@ -15,7 +15,7 @@ set(emu502-gui_Sources
 if (DEFINED WIN32)
     set(emu502-gui_Libs opengl32 "SDL2" "SDL2main")
 else()
-    set(emu502-gui_Libs GL GLEW "SDL2" "SDL2main" dl)
+    set(emu502-gui_Libs GL "SDL2" "SDL2main" dl)
     set(emu502-gui_IncludeDirs "/usr/include/SDL2")
 endif()
 
