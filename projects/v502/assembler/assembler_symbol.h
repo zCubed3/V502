@@ -19,7 +19,7 @@ typedef enum v502_ASSEMBLER_SYMBOL_CALL_FLAGS {
     v502_ASSEMBLER_SYMBOL_CALL_FLAG_ZPG = 8,
 } v502_ASSEMBLER_SYMBOL_CALL_FLAGS_E;
 
-extern const v502_word_t v502_ASSEMBLER_MAGIC_MISSING_CODE;
+#define v502_ASSEMBLER_MAGIC_MISSING_CODE 0xFFFF
 
 typedef struct v502_assembler_symbol {
     const char* name;

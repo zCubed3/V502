@@ -71,6 +71,199 @@ struct V502Library {
     }
 };
 
+void DrawOpcodeDebugWindow(v502_function_table_t* v502_functions, v502_6502vm_t* vm, v502_assembler_instance_t* assembler_instance) {
+    if (!ImGui::Begin("Opcode Debugger")) {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::BeginTable("opcode_example_table", 2, ImGuiTableFlags_Borders);
+
+    ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("WHAT", ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableHeadersRow();
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("IMM");
+    ImGui::TableNextColumn();
+    ImGui::Text("Immediate (only 1 opcode)");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("NOW");
+    ImGui::TableNextColumn();
+    ImGui::Text("Now");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ZPG");
+    ImGui::TableNextColumn();
+    ImGui::Text("Zero Page");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ZPG_X");
+    ImGui::TableNextColumn();
+    ImGui::Text("Zero Page X Indexed");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ZPG_Y");
+    ImGui::TableNextColumn();
+    ImGui::Text("Zero Page Y Indexed");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ABS");
+    ImGui::TableNextColumn();
+    ImGui::Text("Absolute");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ABS_X");
+    ImGui::TableNextColumn();
+    ImGui::Text("Absolute X Indexed");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("ABS_Y");
+    ImGui::TableNextColumn();
+    ImGui::Text("Absolute Y Indexed");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("IND");
+    ImGui::TableNextColumn();
+    ImGui::Text("Indirect");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("IND_X");
+    ImGui::TableNextColumn();
+    ImGui::Text("Indirect X Indexed");
+
+    ImGui::TableNextRow();
+
+    ImGui::TableNextColumn();
+    ImGui::Text("IND_Y");
+    ImGui::TableNextColumn();
+    ImGui::Text("Indirect Y Indexed");
+
+    ImGui::EndTable();
+
+    auto fallback_func = v502_functions->v502_get_fallback_func();
+    for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
+        if (ImGui::TreeNode(sym->name)) {
+            // This is SUPER hacky, but we can check which opcodes are defined since in memory the symbols are technically just int arrays!
+            bool is_loner = sym->only != 0xFFFF;
+
+            ImGui::PushID(sym->name);
+            ImGui::BeginTable("##symbol_table", 3, ImGuiTableFlags_Borders);
+
+            ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("CODE", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("STATE", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableHeadersRow();
+
+            if (is_loner) {
+                ImGui::TableNextRow();
+
+                bool is_missing = vm->opfuncs[sym->only] == fallback_func;
+
+                ImGui::TableNextColumn();
+                ImGui::Text("IMM");
+                ImGui::TableNextColumn();
+
+                ImGui::Text("%02x", sym->only);
+                ImGui::TableNextColumn();
+
+                if (is_missing) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                    ImGui::Text("NO IMPL");
+                    ImGui::PopStyleColor();
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
+                    ImGui::Text("HAS IMPL");
+                    ImGui::PopStyleColor();
+                }
+            } else {
+                uint16_t *opcode = &sym->zpg;
+
+                const char* sym_names[10] = {
+                        "ZPG",
+                        "ZPG_X",
+                        "ZPG_Y",
+                        "ABS",
+                        "ABS_X",
+                        "ABS_Y",
+                        "IND",
+                        "IND_X",
+                        "IND_Y",
+                        "NOW",
+                };
+
+                bool all_missing = true;
+                for (int o = 0; o < 10; o++) {
+                    if (opcode[o] == 0xFFFF)
+                        continue;
+
+                    all_missing = false;
+
+                    if (o != 9 && o != 0)
+                        ImGui::TableNextRow();
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", sym_names[o]);
+                    ImGui::TableNextColumn();
+
+                    // Check if this is missing from the VM
+                    bool is_missing = vm->opfuncs[opcode[o]] == fallback_func;
+
+                    ImGui::Text("%02x", opcode[o]);
+                    ImGui::TableNextColumn();
+
+                    if (is_missing) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                        ImGui::Text("NO IMPL");
+                        ImGui::PopStyleColor();
+                    } else {
+                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
+                        ImGui::Text("HAS IMPL");
+                        ImGui::PopStyleColor();
+                    }
+                }
+
+                if (all_missing) {
+                    for (int x = 0; x < 3; x++) {
+                        ImGui::TableNextColumn();
+                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
+                        ImGui::Text("MISSING ALL");
+                        ImGui::PopStyleColor();
+                    }
+                }
+            }
+
+            ImGui::EndTable();
+            ImGui::PopID();
+
+            ImGui::TreePop();
+        }
+    }
+
+    ImGui::End();
+}
+
 int main(int argc, char** argv) {
     if (!glfwInit()) {
         throw std::runtime_error("GLFW failed to initialize!");
@@ -145,7 +338,7 @@ int main(int argc, char** argv) {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        glClearColor(0.025F, 0.025F, 0.025F, 1.0F);
+        glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -153,8 +346,7 @@ int main(int argc, char** argv) {
         ImGui::NewFrame();
 
         //ImGui::ShowDemoWindow();
-
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        //ImGui::ShowStyleEditor();
 
         ImGui::Begin("V502 VM", nullptr, ImGuiWindowFlags_MenuBar);
 
@@ -409,38 +601,45 @@ int main(int argc, char** argv) {
             }
         }
 
-        memory_stream.str("");
-        memory_stream.clear();
-        memory_stream << std::hex << std::flush;
-
+        ImGui::Spacing();
         ImGui::Text("Program Memory Slice:");
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 0));
 
         auto lower = (vm->program_counter) / 16;
         auto upper = (vm->program_counter + 16) / 16;
 
-        memory_stream << "              ";
+        ImGui::Text(" \t        ");
         for (int x = lower; x < upper; x++) {
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                memory_stream << (idx == vm->program_counter ? "vv" : "  ") << " ";
+                ImGui::SameLine();
+                ImGui::Text("%s", idx == vm->program_counter ? "vv" : "  ");
             }
         }
-        memory_stream << "\n";
+
+        ImGui::Text(" \t0x%04x: ", lower * 16);
 
         for (int x = lower; x < upper; x++) {
-            memory_stream << PAD_HEX << x * 16 << " -> ";
-            memory_stream << PAD_HEX << ((x + 1) * 16) - 1 << ": ";
-
             for (int y = 0; y < 16; y++) {
                 int idx = x * 16 + y;
-                int value = +vm->hunk[idx];
-                memory_stream << PAD_HEX_LO << value << " ";
+                bool on_line = vm->program_counter == idx;
+
+                if (on_line)
+                    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 213, 88, 255));
+
+                ImGui::SameLine();
+                ImGui::Text("%02x", vm->hunk[idx]);
+
+                if (on_line)
+                    ImGui::PopStyleColor();
             }
-            memory_stream << "\n";
         }
 
-        memory_stream << std::endl;
-        ImGui::Text("%s", memory_stream.str().c_str());
+        ImGui::PopStyleVar();
+
+        ImGui::Spacing();
+        ImGui::Spacing();
 
         ImGui::Text("Disassembly:");
 
@@ -481,7 +680,7 @@ int main(int argc, char** argv) {
 
         ImGui::End();
 
-        ImGui::Begin("Image");
+        ImGui::Begin("Memory Visualizer");
 
         ImGui::InputInt("Image Page", &image_page);
         image_page = std::min(253, std::max(0, image_page));
@@ -494,193 +693,7 @@ int main(int argc, char** argv) {
 
         ImGui::End();
 
-        ImGui::Begin("Opcode Debugger");
-
-        ImGui::BeginTable("opcode_example_table", 2, ImGuiTableFlags_Borders);
-
-        ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("WHAT", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableHeadersRow();
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("IMM");
-        ImGui::TableNextColumn();
-        ImGui::Text("Immediate (only 1 opcode)");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("NOW");
-        ImGui::TableNextColumn();
-        ImGui::Text("Now");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ZPG");
-        ImGui::TableNextColumn();
-        ImGui::Text("Zero Page");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ZPG_X");
-        ImGui::TableNextColumn();
-        ImGui::Text("Zero Page X Indexed");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ZPG_Y");
-        ImGui::TableNextColumn();
-        ImGui::Text("Zero Page Y Indexed");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ABS");
-        ImGui::TableNextColumn();
-        ImGui::Text("Absolute");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ABS_X");
-        ImGui::TableNextColumn();
-        ImGui::Text("Absolute X Indexed");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("ABS_Y");
-        ImGui::TableNextColumn();
-        ImGui::Text("Absolute Y Indexed");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("IND");
-        ImGui::TableNextColumn();
-        ImGui::Text("Indirect");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("IND_X");
-        ImGui::TableNextColumn();
-        ImGui::Text("Indirect X Indexed");
-
-        ImGui::TableNextRow();
-
-        ImGui::TableNextColumn();
-        ImGui::Text("IND_Y");
-        ImGui::TableNextColumn();
-        ImGui::Text("Indirect Y Indexed");
-
-        ImGui::EndTable();
-
-        auto fallback_func = v502_functions->v502_get_fallback_func();
-        for (v502_assembler_symbol_t *sym = assembler_instance->symbol_stack; sym != nullptr; sym = sym->next) {
-            if (ImGui::TreeNode(sym->name)) {
-                // This is SUPER hacky, but we can check which opcodes are defined since in memory the symbols are technically just int arrays!
-                bool is_loner = sym->only != 0xFFFF;
-
-                ImGui::PushID(sym->name);
-                ImGui::BeginTable("##symbol_table", 3, ImGuiTableFlags_Borders);
-
-                ImGui::TableSetupColumn("SYM", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("CODE", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("STATE", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableHeadersRow();
-
-                if (is_loner) {
-                    ImGui::TableNextRow();
-
-                    bool is_missing = vm->opfuncs[sym->only] == fallback_func;
-
-                    ImGui::TableNextColumn();
-                    ImGui::Text("IMM");
-                    ImGui::TableNextColumn();
-
-                    ImGui::Text("%02x", sym->only);
-                    ImGui::TableNextColumn();
-
-                    if (is_missing) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
-                        ImGui::Text("NO IMPL");
-                        ImGui::PopStyleColor();
-                    } else {
-                        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
-                        ImGui::Text("HAS IMPL");
-                        ImGui::PopStyleColor();
-                    }
-                } else {
-                    uint16_t *opcode = &sym->zpg;
-
-                    const char* sym_names[10] = {
-                            "ZPG",
-                            "ZPG_X",
-                            "ZPG_Y",
-                            "ABS",
-                            "ABS_X",
-                            "ABS_Y",
-                            "IND",
-                            "IND_X",
-                            "IND_Y",
-                            "NOW",
-                    };
-
-                    bool all_missing = true;
-                    for (int o = 0; o < 10; o++) {
-                        if (opcode[o] == 0xFFFF)
-                            continue;
-
-                        all_missing = false;
-
-                        if (o != 9 && o != 0)
-                            ImGui::TableNextRow();
-
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%s", sym_names[o]);
-                        ImGui::TableNextColumn();
-
-                        // Check if this is missing from the VM
-                        bool is_missing = vm->opfuncs[opcode[o]] == fallback_func;
-
-                        ImGui::Text("%02x", opcode[o]);
-                        ImGui::TableNextColumn();
-
-                        if (is_missing) {
-                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
-                            ImGui::Text("NO IMPL");
-                            ImGui::PopStyleColor();
-                        } else {
-                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(76, 175, 80, 255));
-                            ImGui::Text("HAS IMPL");
-                            ImGui::PopStyleColor();
-                        }
-                    }
-
-                    if (all_missing) {
-                        for (int x = 0; x < 3; x++) {
-                            ImGui::TableNextColumn();
-                            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(244, 67, 54, 255));
-                            ImGui::Text("MISSING ALL");
-                            ImGui::PopStyleColor();
-                        }
-                    }
-                }
-
-                ImGui::EndTable();
-                ImGui::PopID();
-
-                ImGui::TreePop();
-            }
-        }
-
-        ImGui::End();
+        DrawOpcodeDebugWindow(v502_functions, vm, assembler_instance);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

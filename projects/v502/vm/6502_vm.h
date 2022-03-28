@@ -38,7 +38,7 @@ typedef struct v502_6502vm_createinfo {
 //
 
 // Magic start vector index, this was used by the actual 6502 for finding the origin of a program
-extern const v502_word_t v502_MAGIC_VECTOR_INDEX;
+#define v502_MAGIC_VECTOR_INDEX 0xFFFC
 
 typedef struct v502_6502vm {
     v502_word_t program_counter;

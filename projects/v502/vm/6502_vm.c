@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-const v502_word_t v502_MAGIC_VECTOR_INDEX = 0xFFFC;
-
 v502_word_t v502_make_word(v502_byte_t a, v502_byte_t b) {
     return (a << 8) | b;
 }

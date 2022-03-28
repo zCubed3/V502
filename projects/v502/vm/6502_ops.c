@@ -26,6 +26,14 @@ v502_DEFINE_OPFUNC(ADC) {
         vm->program_counter += 2;
     }
 
+    if (op == v502_MOS_OP_ADC_X_IND || op == v502_MOS_OP_ADC_Y_IND) {
+        where = v502_make_word(vm->hunk[vm->program_counter + 2], vm->hunk[vm->program_counter + 1]);
+        where += (op == v502_MOS_OP_ADC_X_IND ? vm->index_x : 0);
+
+        where = v502_make_word(vm->hunk[where + 1], vm->hunk[where]) + (op == v502_MOS_OP_ADC_Y_IND ? vm->index_y : 0);
+        vm->program_counter += 2;
+    }
+
     v502_safe_add_vm(vm, vm->hunk[where]);
     return V502_OP_STATE_SUCCESS;
 }
@@ -153,6 +161,9 @@ v502_DEFINE_OPFUNC(LDR) {
     if (op == v502_MOS_OP_LDA_NOW || op == v502_MOS_OP_LDX_NOW)
         where = ++vm->program_counter;
 
+    if (op == v502_MOS_OP_LDA_ZPG)
+        where = v502_make_word(0x00, ++vm->program_counter);
+
     *what = vm->hunk[where];
 
     return V502_OP_STATE_SUCCESS;
@@ -162,6 +173,7 @@ v502_DEFINE_OPFUNC(LDR) {
 //
 // Flow control ops
 //
+
 v502_DEFINE_OPFUNC(NOP) {
     return V502_OP_STATE_SUCCESS; // Waste a cycle
 }
@@ -266,6 +278,25 @@ v502_DEFINE_OPFUNC(JMP) {
     return V502_OP_STATE_SUCCESS_NO_COUNT;
 }
 
+v502_DEFINE_OPFUNC(JSR) {
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr--)] = (vm->program_counter + 2);
+    vm->hunk[v502_make_word(0x01, vm->stack_ptr--)] = (vm->program_counter + 2) >> 8;
+    vm->program_counter = v502_make_word(vm->hunk[vm->program_counter + 2], vm->hunk[vm->program_counter + 1]);
+
+    return V502_OP_STATE_SUCCESS_NO_COUNT;
+}
+
+v502_DEFINE_OPFUNC(RTS) {
+    v502_byte_t l = vm->hunk[v502_make_word(0x01, vm->stack_ptr + 2)];
+    v502_byte_t h = vm->hunk[v502_make_word(0x01, vm->stack_ptr + 1)];
+    vm->program_counter = v502_make_word(h, l);
+
+    vm->hunk[v502_make_word(0x01, ++vm->stack_ptr)] = 0;
+    vm->hunk[v502_make_word(0x01, ++vm->stack_ptr)] = 0;
+
+    return V502_OP_STATE_SUCCESS;
+}
+
 //
 // opfunc array populate function
 //
@@ -289,6 +320,7 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
     vm->opfuncs[v502_MOS_OP_STA_Y_ABS] = OP_STA;
 
     vm->opfuncs[v502_MOS_OP_LDA_NOW] = OP_LDR;
+    vm->opfuncs[v502_MOS_OP_LDA_ZPG] = OP_LDR;
 
     vm->opfuncs[v502_MOS_OP_CMP_NOW] = OP_CPR;
 
@@ -345,6 +377,10 @@ void v502_populate_ops_vm(v502_6502vm_t* vm) {
 
     vm->opfuncs[v502_MOS_OP_JMP_ABS] = OP_JMP;
     vm->opfuncs[v502_MOS_OP_JMP_IND] = OP_JMP;
+
+    vm->opfuncs[v502_MOS_OP_JSR_ABS] = OP_JSR;
+
+    vm->opfuncs[v502_MOS_OP_RTS] = OP_RTS;
 
     // TODO: W65C02 Ops
     if (vm->feature_set == v502_FEATURESET_W65C02) {
