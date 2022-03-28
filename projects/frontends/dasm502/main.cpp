@@ -21,8 +21,6 @@ void print_help() {
     std::cout << std::endl;
 }
 
-#define PIPE_INPUT_BUF_SIZE 1024
-
 // Frontend for the assembler
 int main(int argc, char** argv) {
     std::string binary_path, out_path;
