@@ -6,7 +6,7 @@
 #include <vector>
 #include <iomanip> // for setw and setfill
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <imgui.h>
@@ -275,8 +275,8 @@ int main(int argc, char** argv) {
     GLFWwindow *window = glfwCreateWindow(1280, 720, "V502 GUI", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
-    if (glewInit() != GLEW_OK) {
-        throw std::runtime_error("GLEW failed to initialize!");
+    if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
+        throw std::runtime_error("GLAD  failed to initialize!");
     }
 
     V502Library lib {};
