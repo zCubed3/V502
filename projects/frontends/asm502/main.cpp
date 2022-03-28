@@ -21,8 +21,6 @@ void print_help() {
     std::cout << std::endl;
 }
 
-#define PIPE_INPUT_BUF_SIZE 10000 // 1MB
-
 // Frontend for the assembler
 int main(int argc, char** argv) {
     std::string source_path, out_path;
@@ -123,15 +121,17 @@ int main(int argc, char** argv) {
 
     v502_assembler_instance_t *assembler = v502_create_assembler();
 
-    const char *source;
+    const char *source = NULL;
+    std::string str_buf = "";
 
     if (!pipe_in)
         source = v502_load_source(source_path.c_str());
     else {
-        char* str_buf = (char*)calloc(PIPE_INPUT_BUF_SIZE, 1);
-        fread(str_buf, PIPE_INPUT_BUF_SIZE, 1, stdin);
+        char c = 0;
+        while ((c = getc(stdin)) != EOF)
+            str_buf += c;
 
-        source = str_buf;
+        source = str_buf.c_str();
     }
 
     v502_binary_file_t *binary = v502_assemble_source(assembler, source);
