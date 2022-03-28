@@ -8,7 +8,7 @@
 #include <vector>
 
 #if defined(__linux__) || defined(__FreeBSD__) || defined(__unix__)
-#define UNIX_LIKE
+//#define UNIX_LIKE
 #include <unistd.h>
 #endif
 

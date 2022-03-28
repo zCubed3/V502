@@ -7,11 +7,11 @@
 #include <iomanip> // for setw and setfill
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 
 #include <imgui.h>
-#include <backends/imgui_impl_opengl3.h>
-#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl2.h>
+#include <backends/imgui_impl_sdl.h>
 
 #define V502_INCLUDE_ASSEMBLER
 #define V502_SHARED_LIBRARY
@@ -55,7 +55,7 @@ struct V502Library {
 
 #ifdef WIN32
         if (module) {
-            // TODO: WIN32 UnloadLibrary;
+            FreeLibrary(module);
             module = nullptr;
         }
 
@@ -66,6 +66,11 @@ struct V502Library {
     v502_function_table_t* GetTable() {
 #ifdef UNIX_LIKE
         auto fptr = (fptr_get_function_table)dlsym(handle, "v502_get_function_table");
+        return fptr();
+#endif
+
+#ifdef WIN32
+        auto fptr = (ftpr_get_function_table)GetProcAddress(module, "v502_get_function_table");
         return fptr();
 #endif
     }
@@ -265,18 +270,17 @@ void DrawOpcodeDebugWindow(v502_function_table_t* v502_functions, v502_6502vm_t*
 }
 
 int main(int argc, char** argv) {
-    if (!glfwInit()) {
-        throw std::runtime_error("GLFW failed to initialize!");
-    }
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    SDL_Window *window = SDL_CreateWindow("V502 GUI", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "V502 GUI", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress)) {
-        throw std::runtime_error("GLAD  failed to initialize!");
+    SDL_GLContext sdl_context = SDL_GL_CreateContext(window);
+
+    if (!gladLoadGLES2Loader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        throw std::runtime_error("GLAD failed to initialize!");
     }
 
     V502Library lib {};
@@ -292,15 +296,15 @@ int main(int argc, char** argv) {
     v502_assembler_instance_t* assembler_instance = v502_functions->v502_create_assembler();
 
     ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 150");
+    ImGui_ImplSDL2_InitForOpenGL(window, sdl_context);
+    ImGui_ImplOpenGL2_Init();
 
     ImGuiStyle &style = ImGui::GetStyle();
     ImGui::StyleColorsDark(&style);
 
     ImGuiIO &imguiIO = ImGui::GetIO();
     imguiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    imguiIO.Fonts->AddFontFromFileTTF("font.ttf", 14);
+    //imguiIO.Fonts->AddFontFromFileTTF("font.ttf", 14);
 
     int page_number = 0;
     std::stringstream memory_stream;
@@ -335,14 +339,28 @@ int main(int argc, char** argv) {
 
     bool long_flag_name = false, long_reg_name = false;
 
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
+    bool should_close = false;
+    bool resized = false;
+    SDL_Event sdl_event;
+
+    while (!should_close) {
+        while (SDL_PollEvent(&sdl_event) != 0) {
+            if (sdl_event.type == SDL_QUIT)
+                should_close = false;
+
+            if (sdl_event.type == SDL_WINDOWEVENT) {
+                if (sdl_event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    resized = true;
+            }
+
+            ImGui_ImplSDL2_ProcessEvent(&sdl_event);
+        }
 
         glClearColor(0.1F, 0.1F, 0.1F, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplOpenGL2_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
         //ImGui::ShowDemoWindow();
@@ -437,7 +455,7 @@ int main(int argc, char** argv) {
             ImGui::EndMenuBar();
         }
 
-        glfwSwapInterval(vsync ? 1 : 0);
+        SDL_GL_SetSwapInterval(vsync ? 1 : 0);
 
         ImGui::InputInt("Step Interval (ms)", &cycle_interval);
         ImGui::InputInt("Substeps", &substeps);
@@ -696,8 +714,8 @@ int main(int argc, char** argv) {
         DrawOpcodeDebugWindow(v502_functions, vm, assembler_instance);
 
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(window);
+        SDL_GL_SwapWindow(window);
     }
 }
