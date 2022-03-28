@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
     while (!should_close) {
         while (SDL_PollEvent(&sdl_event) != 0) {
             if (sdl_event.type == SDL_QUIT)
-                should_close = false;
+                should_close = true;
 
             if (sdl_event.type == SDL_WINDOWEVENT) {
                 if (sdl_event.window.event == SDL_WINDOWEVENT_RESIZED)
